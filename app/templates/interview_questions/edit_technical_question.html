@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('interview_questions.technical_questions') }}">Technical Questions</a></li>
+            <li class="breadcrumb-item active">Edit Question</li>
+        </ol>
+    </nav>
+
+    <h2>Edit Technical Question</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('interview_questions.edit_technical_question', question_id=question.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-group mb-3">
+                    <label for="text" class="form-label">Question Text:</label>
+                    <textarea id="text" name="text" class="form-control" rows="3" required>{{ question.text }}</textarea>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="question_type" class="form-label">Question Type:</label>
+                        <select id="question_type" name="question_type" class="form-select" required 
+                                onchange="toggleChoiceFields()">
+                            <option value="multiple_choice" {% if question.question_type.value == 'multiple_choice' %}selected{% endif %}>Multiple Choice</option>
+                            <option value="open_ended" {% if question.question_type.value == 'open_ended' %}selected{% endif %}>Open Ended</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="category_id" class="form-label">Category:</label>
+                        <select id="category_id" name="category_id" class="form-select">
+                            <option value="">Uncategorized</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if question.category_id == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Multiple Choice Fields -->
+                <div id="multipleChoiceFields" style="display: {% if question.question_type.value == 'multiple_choice' %}block{% else %}none{% endif %};">
+                    <h5>Multiple Choice Options</h5>
+                    <div id="choicesContainer">
+                        {% if question.question_type.value == 'multiple_choice' %}
+                            {% for choice in question.choices %}
+                            <div class="choice-item mb-2">
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <input type="checkbox" name="choice_correct[]" value="{{ loop.index0 }}" 
+                                               class="form-check-input" {% if choice.is_correct %}checked{% endif %}>
+                                    </div>
+                                    <input type="hidden" name="choice_id[]" value="{{ choice.id }}">
+                                    <input type="text" name="choice_text[]" class="form-control" value="{{ choice.text }}">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeChoice(this)">×</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="choice-item mb-2">
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <input type="checkbox" name="choice_correct[]" value="0" class="form-check-input">
+                                    </div>
+                                    <input type="text" name="choice_text[]" class="form-control" placeholder="Choice text...">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeChoice(this)">×</button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addChoice()">
+                        + Add Another Choice
+                    </button>
+                    <small class="form-text text-muted">Check the box for correct answer(s)</small>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Update Question</button>
+                    <a href="{{ url_for('interview_questions.technical_questions') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let choiceCount = {{ question.choices|length if question.question_type.value == 'multiple_choice' else 1 }};
+
+function toggleChoiceFields() {
+    const questionType = document.getElementById('question_type').value;
+    const choiceFields = document.getElementById('multipleChoiceFields');
+    
+    if (questionType === 'multiple_choice') {
+        choiceFields.style.display = 'block';
+    } else {
+        choiceFields.style.display = 'none';
+    }
+}
+
+function addChoice() {
+    const container = document.getElementById('choicesContainer');
+    const newChoice = document.createElement('div');
+    newChoice.className = 'choice-item mb-2';
+    newChoice.innerHTML = `
+        <div class="input-group">
+            <div class="input-group-text">
+                <input type="checkbox" name="choice_correct[]" value="${choiceCount}" class="form-check-input">
+            </div>
+            <input type="text" name="choice_text[]" class="form-control" placeholder="Choice text...">
+            <button type="button" class="btn btn-outline-danger" onclick="removeChoice(this)">×</button>
+        </div>
+    `;
+    container.appendChild(newChoice);
+    choiceCount++;
+}
+
+function removeChoice(button) {
+    if (document.querySelectorAll('.choice-item').length > 1) {
+        button.closest('.choice-item').remove();
+    } else {
+        alert('At least one choice is required.');
+    }
+}
+</script>
+{% endblock %}

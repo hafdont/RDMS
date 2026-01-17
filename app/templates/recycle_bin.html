@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% block title %}Recycle Bin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-trash-alt text-secondary me-2"></i>Recycle Bin
+            </h1>
+            <p class="text-muted mb-0">
+                {% if is_director %}
+                    View and manage all deleted items
+                {% else %}
+                    Your deleted items
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <!-- Filter by item type -->
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-1"></i>
+                    Filter: {{ model_type|title }}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('recycle_bin.view_recycle_bin', type='all') }}">All Items</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('recycle_bin.view_recycle_bin', type='tasks') }}">Tasks</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('recycle_bin.view_recycle_bin', type='jobs') }}">Engagements</a></li>
+                    {% if is_director %}
+                    <li><a class="dropdown-item" href="{{ url_for('recycle_bin.view_recycle_bin', type='users') }}">Users</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('recycle_bin.view_recycle_bin', type='departments') }}">Departments</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('recycle_bin.view_recycle_bin', type='clients') }}">Clients</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('recycle_bin.view_recycle_bin', type='services') }}">Services</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {% if deleted_items %}
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-2 col-6 border-end">
+                            <small class="text-muted d-block">Total Items</small>
+                            <h4 class="mb-0">{{ total_count }}</h4>
+                        </div>
+                        <div class="col-md-2 col-6 border-end">
+                            <small class="text-muted d-block">Tasks</small>
+                            <h4 class="mb-0">{{ stats.tasks or 0 }}</h4>
+                        </div>
+                        <div class="col-md-2 col-6 border-end">
+                            <small class="text-muted d-block">Engagements</small>
+                            <h4 class="mb-0">{{ stats.jobs or 0 }}</h4>
+                        </div>
+                        {% if is_director %}
+                        <div class="col-md-2 col-6 border-end">
+                            <small class="text-muted d-block">Users</small>
+                            <h4 class="mb-0">{{ stats.users or 0 }}</h4>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <small class="text-muted d-block">Departments</small>
+                            <h4 class="mb-0">{{ stats.departments or 0 }}</h4>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Grid - Cards Layout -->
+    <div class="row g-3">
+        {% for item in deleted_items %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card h-100 recycle-bin-card">
+                <div class="card-body">
+                    <!-- Item Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge 
+                            {% if item.type == 'Task' %}bg-primary
+                            {% elif item.type == 'Engagement' %}bg-success
+                            {% elif item.type == 'User' %}bg-info
+                            {% elif item.type == 'Department' %}bg-warning
+                            {% elif item.type == 'Client' %}bg-dark
+                            {% elif item.type == 'Service' %}bg-secondary
+                            {% else %}bg-secondary{% endif %}">
+                            {{ item.type }}
+                        </span>
+                        <small class="text-muted">
+                            {{ item.deleted_at.strftime('%m/%d/%Y') }}
+                        </small>
+                    </div>
+
+                    <!-- Item Content -->
+                    <h6 class="card-title mb-2">
+                        {% if item.type == 'Task' %}
+                            {{ item.object.title }}
+                        {% elif item.type == 'Engagement' %}
+                            {{ item.object.name }}
+                        {% elif item.type == 'User' %}
+                            {{ item.object.full_name }}
+                            <br><small class="text-muted">{{ item.object.email }}</small>
+                        {% elif item.type == 'Department' %}
+                            {{ item.object.name }}
+                        {% elif item.type == 'Client' %}
+                            {{ item.object.name }}
+                            <br><small class="text-muted">{{ item.object.contact_email or 'No email' }}</small>
+                        {% elif item.type == 'Service' %}
+                            {{ item.object.name }}
+                        {% else %}
+                            {{ item.object.name if item.object.name else item.object.title }}
+                        {% endif %}
+                    </h6>
+
+                    {% if item.type == 'Task' and item.object.description %}
+                    <p class="card-text small text-muted mb-2">
+                        {{ item.object.description|truncate(100) }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Metadata -->
+                    <div class="small text-muted mb-3">
+                        <div>
+                            <i class="fas fa-user me-1"></i>
+                            Deleted by: 
+                            {% if item.deleted_by %}
+                                {{ item.deleted_by.full_name }}
+                            {% else %}
+                                <span class="text-muted">System</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <i class="fas fa-clock me-1"></i>
+                            {{ item.deleted_at.strftime('%H:%M') }}
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="btn-group w-100">
+                        <form method="POST" 
+                              action="{{ url_for('recycle_bin.restore_item', 
+                                      item_type=item.type.lower().replace(' ', '_'), 
+                                      item_id=item.object.id) }}"
+                              class="flex-fill">
+                              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-success btn-sm w-100" 
+                                    onclick="return confirm('Restore this {{ item.type.lower() }}?')">
+                                <i class="fas fa-undo me-1"></i>Restore
+                            </button>
+                        </form>
+                        
+                        {% if is_director %}
+                        <button type="button" class="btn btn-outline-danger btn-sm ms-1" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteModal{{ item.type }}{{ item.object.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        {% if is_director %}
+        <div class="modal fade" id="deleteModal{{ item.type }}{{ item.object.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Permanent Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to permanently delete this {{ item.type.lower() }}?</p>
+                        <div class="alert alert-danger">
+                            <strong>Warning:</strong> This action cannot be undone! All data will be permanently lost.
+                        </div>
+                        <strong>{{ item.object.title if item.type == 'Task' else item.object.name }}</strong>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="POST" 
+                              action="{{ url_for('recycle_bin.permanent_delete', 
+                                      item_type=item.type.lower().replace(' ', '_'), 
+                                      item_id=item.object.id ) }}">
+                                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger">Permanently Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted">
+            Showing {{ start_index }}-{{ end_index }} of {{ total_count }} items
+        </div>
+        
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('recycle_bin.view_recycle_bin', page=page-1, type=model_type) }}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in range(1, total_pages + 1) %}
+                    {% if page_num >= page - 2 and page_num <= page + 2 %}
+                    <li class="page-item {% if page_num == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('recycle_bin.view_recycle_bin', page=page_num, type=model_type) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('recycle_bin.view_recycle_bin', page=page+1, type=model_type) }}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <div class="text-muted">
+            Page {{ page }} of {{ total_pages }}
+        </div>
+    </div>
+
+    {% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-trash-alt fa-4x text-muted"></i>
+        </div>
+        <h4 class="text-muted">No deleted items found</h4>
+        <p class="text-muted">
+            {% if model_type != 'all' %}
+                Try changing the filter or 
+            {% endif %}
+            Items you delete will appear here.
+        </p>
+        {% if model_type != 'all' %}
+        <a href="{{ url_for('recycle_bin.view_recycle_bin', type='all') }}" class="btn btn-primary">
+            View All Items
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.recycle-bin-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #e9ecef;
+}
+
+.recycle-bin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.recycle-bin-card .card-body {
+    padding: 1.25rem;
+}
+
+.recycle-bin-card .badge {
+    font-size: 0.7em;
+}
+
+.recycle-bin-card .card-title {
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.recycle-bin-card .card-text {
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

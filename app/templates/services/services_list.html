@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %} 3A CPA LLP's Services {% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="page-header mb-3 mt-3">
+        <h1 class="page-title mb-0">Our Professional Services</h1>
+        <a href="{{ url_for('services.create_service') }}" class="btn btn-primary-brand btn-lg shadow-sm">
+            <i class="fas fa-plus-circle me-2"></i> Add New Service
+        </a>
+    </div>
+
+    {% if services %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            
+            {# --- Define our lists for cycling through --- #}
+            {% set colors = ['#ad2831', '#0d6efd', '#198754', '#6f42c1', '#fd7e14'] %}
+            {% set icons = ['fas fa-calculator', 'fas fa-chart-line', 'fas fa-balance-scale', 'fas fa-handshake', 'fas fa-file-invoice-dollar'] %}
+
+            {% for service in services %}
+            
+            {# --- Get the color and icon for this specific card --- #}
+            {% set color = colors[loop.index0 % colors|length] %}
+            {% set icon = icons[loop.index0 % icons|length] %}
+
+            <div class="col">
+                <a href="{{ url_for('services.get_service', service_id=service.id) }}" class="text-decoration-none">
+                    {# Here we dynamically set the --accent-color CSS variable for each card #}
+                    <div class="service-card" style="--accent-color: {{ color }};">
+                        
+                        <div class="card-icon">
+                            <i class="{{ icon }}"></i>
+                        </div>
+                        
+                        <div class="card-body">
+                            <h5 class="card-title">{{ service.name }}</h5>
+                            <p class="card-text">
+                                {{ service.description | truncate(100) or "No description available." }}
+                            </p>
+                        </div>
+
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        {# The 'No Services Found' alert remains the same, it's already pretty good #}
+        <div class="alert alert-light text-center py-5 border-top-accent">
+            <h4 class="alert-heading mb-3 text-primary"><i class="fas fa-info-circle me-2"></i> No Services Found!</h4>
+            <p>It looks like there are no services added yet. Start by creating a new one!</p>
+            <hr class="w-50 mx-auto">
+            <a href="{{ url_for('services.create_service') }}" class="btn btn-primary-brand mt-2">
+                <i class="fas fa-plus-circle me-2"></i> Create Your First Service
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

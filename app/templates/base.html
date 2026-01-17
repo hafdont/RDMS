@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>3A CPA LLP - {% block title %}{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
+
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@12/dist/handsontable.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@12/dist/handsontable.min.js"></script>
+
+    <!-- Handsontable CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@13.0.0/dist/handsontable.full.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/handsontable@13.0.0/dist/handsontable.full.min.js"></script>
+
+    <style>
+        /* NEW: Container for our flash/toast notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1056; /* Higher than most other elements */
+            display: flex;
+            flex-direction: column-reverse; /* New toasts appear on top */
+            gap: 10px;
+        }
+
+        /* NEW: Style for an individual toast notification */
+        .toast-flash {
+            display: block;
+            padding: 15px 20px;
+            min-width: 320px;
+            background-color: rgba(33, 37, 41, 0.85); /* Semi-transparent dark bg */
+            color: #f8f9fa;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+            text-decoration: none;
+            opacity: 0.9; /* Start slightly transparent */
+            transform: translateX(-100%); /* Start off-screen */
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.5s ease-out;
+        }
+
+        /* NEW: Animate the toast in */
+        .toast-flash.show {
+            transform: translateX(0);
+        }
+        
+        /* NEW: Make it fully opaque on hover */
+        .toast-flash:hover {
+            opacity: 1;
+            background-color: rgba(33, 37, 41, 1); /* Solid dark bg on hover */
+        }
+
+        .toast-flash .toast-message {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .toast-flash .toast-time {
+            font-size: 0.75em;
+            color: #adb5bd;
+        }
+            /* Loader overlay styles */
+        #loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            display: none; /* Hide by default */
+        }
+        .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Notification dropdown hover fix for manual toggle */
+        #notification-dropdown.show {
+            display: block !important;
+        }
+
+        /* Toast popup (if you use showToast) */
+        .toast-notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background-color: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1055;
+        }
+
+        /* Custom styles for notification items */
+        .notification-item {
+            padding: 0.5rem 1rem; /* Adjust padding as needed */
+            display: flex;
+            align-items: center;
+            gap: 0.75rem; /* Space between icon and text */
+            white-space: normal; /* Allow text to wrap */
+        }
+        .notification-item i {
+            min-width: 1.25rem; /* Ensure icon has enough space */
+            text-align: center;
+        }
+        .notification-item .notification-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .notification-item .notification-message {
+            font-weight: 500;
+            color: inherit; /* Ensure text color is inherited from dropdown-menu-dark or default */
+        }
+        .notification-item .notification-time {
+            font-size: 0.75em;
+            color: #adb5bd; /* Lighter grey for time */
+        }
+        /* In your <style> tag */
+        #notification-dropdown {
+            min-width: 300px; /* Adjust this value as needed, e.g., 350px, 400px */
+            max-width: 450px; /* Optional: Set a max-width to prevent it from getting too wide */
+            width: auto; /* Allow width to adjust based on content up to max-width */
+        }
+        /* Ensure text wraps within notification items */
+        .notification-item .notification-message {
+            white-space: normal; /* This makes sure long messages wrap to the next line */
+            word-wrap: break-word; /* Helps with very long words */
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top shadow-sm">
+    <div class="container-fluid">
+
+        <a class="navbar-brand d-flex align-items-center" href="{{ url_for('main.home') }}">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" width="50" height="40" class="me-2">
+        </a>
+
+        <!-- Toggler -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Collapsible Content -->
+        <div class="collapse navbar-collapse justify-content-between" id="mainNavbar">
+        {% if current_user.is_authenticated %}
+
+        <!-- Left Side -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.dashboard') }}">
+                    <i class="fas fa-home me-1" style="color: #007bff;"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('sheet.list_sheets') }}">
+                    <i class="fas fa-file-excel me-1" style="color: #17a2b8;"></i> Sheets
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('recycle_bin.view_recycle_bin') }}" role="button">
+                    <div class="position-relative">
+                        <i class="fas fa-trash-alt fa-lg" style="color: #6c757d;"></i> Bin
+                        <span id="recycle-bin-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning" style="display: none;">
+                            0
+                        </span>
+                    </div>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.view_all_notifications') }}" role="button">
+                    <div class="position-relative">
+                        <i class="fas fa-bell fa-lg"></i>
+                        <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                            0
+                        </span>
+                    </div>
+                </a>
+            </li>
+        </ul>
+
+        {% endif %}
+
+        <!-- Right Side -->
+        {% if current_user.is_authenticated %}
+        <ul class="navbar-nav mb-2 mb-lg-0 d-flex align-items-center">
+            <li class="nav-item me-3">
+            <span class="navbar-text small text-muted" id="currentDateTime"></span>
+            </li>
+            
+            <li class="nav-item dropdown">
+
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {% if current_user.profile_image_file and current_user.profile_image_file.strip() != "" %}
+                    <img class="img-fluid rounded-circle border shadow me-2" 
+                        src="{{ storage_service.get_file_url(current_user.profile_image_file) }}" 
+                        alt="Profile"
+                        style="width: 35px; height: 35px; object-fit: cover;"
+                        onerror="this.parentElement.innerHTML='<div class=\'d-flex justify-content-center align-items-center rounded-circle border shadow me-2\' style=\'width: 35px; height: 35px; background-color: #007bff; color: #fff; font-size: 14px; font-weight: bold;\'>{{ current_user.first_name[0]|upper }}{{ current_user.last_name[0]|upper }}</div>';">
+                {% else %}
+                    <div class="d-flex justify-content-center align-items-center rounded-circle border shadow me-2"
+                        style="width: 35px; height: 35px; background-color: #007bff; color: #fff; font-size: 14px; font-weight: bold;">
+                        {{ current_user.first_name[0]|upper }}{{ current_user.last_name[0]|upper }}
+                    </div>
+                {% endif %}
+                <span>{{ current_user.first_name }}</span>
+            </a>
+
+
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href=" {{url_for('user.profile_detail', user_id=current_user.id) }}"><i class="fas fa-user me-2"></i> View Profile</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('user.edit_user', user_id=current_user.id) }}"><i class="fas fa-edit me-2"></i> Edit Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+            </ul>
+            </li>
+
+        
+        </ul>
+        {% else %}
+
+        <ul class="navbar-nav mb-2 mb-lg-0 d-flex align-items-center">
+            <li class="nav-item">
+                <a class="nav-link me-auto" href="{{ url_for('auth.login') }}"><i class="fa-solid fa-right-to-bracket "></i> Login</a>
+
+            </li>
+
+        </ul>
+
+        {% endif %}
+        </div>
+    </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        {# Flash messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div class="container-fluid">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="modal fade" id="userProfileModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content p-3">
+            <div id="userProfileContent">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Loader HTML -->
+    <div id="loader-overlay">
+        <div class="loader"></div>
+    </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init(); // Initialize AOS after its script is loaded
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data-10-year-range.min.js"></script>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                console.log('trying to Registering service worker...');
+                navigator.serviceWorker.register('{{ url_for('static', filename='serviceworker.js') }}')
+                    .then(function(registration) {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    }).catch(function(error) {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+    {% block scripts %} {% endblock %}
+    <script id="main-js" 
+            data-notifications-url="{{ url_for('main.get_notifications') }}"
+            src="{{ url_for('static', filename='js/main.js') }}">
+    </script>
+</body>
+
+</html>

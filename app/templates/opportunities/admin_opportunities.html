@@ -1,0 +1,211 @@
+<!-- templates/opportunities/admin/opportunities.html -->
+{% extends "base.html" %}
+
+{% block title %}Manage Opportunities - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Manage Opportunities</h1>
+                <a href="{{ url_for('opportunities.admin_create_opportunity') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Create New Opportunity
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ opportunities|length }}</h4>
+                            <span>Total Opportunities</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-briefcase display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ opportunities|selectattr('is_active')|list|length }}</h4>
+                            <span>Active Opportunities</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-eye display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ opportunities|selectattr('opportunity_type.value', 'equalto', 'internal')|list|length }}</h4>
+                            <span>Internal Positions</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-building display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ opportunities|selectattr('opportunity_type.value', 'equalto', 'external')|list|length }}</h4>
+                            <span>External Positions</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-building-gear display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opportunities Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Client/Role</th>
+                            <th>Status</th>
+                            <th>Dates</th>
+                            <th>Views</th>
+                            <th>Applications</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for opportunity in opportunities %}
+                        <tr>
+                            <td>
+                                <strong>{{ opportunity.title }}</strong>
+                                {% if opportunity.is_remote %}
+                                <span class="badge bg-info ms-1">Remote</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if opportunity.opportunity_type.value == 'internal' %}bg-success{% else %}bg-primary{% endif %}">
+                                    {{ opportunity.opportunity_type.value|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <strong>Client:</strong> {{ opportunity.display_client or 'N/A' }}<br>
+                                    <strong>Role:</strong> {{ opportunity.job_role.name if opportunity.job_role else opportunity.job_role_name }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if opportunity.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif opportunity.status.value == 'closed' %}
+                                <span class="badge bg-danger">Closed</span>
+                                {% elif opportunity.status.value == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                                {% else %}
+                                <span class="badge bg-warning">{{ opportunity.status.value|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <strong>Open:</strong> {{ opportunity.opening_date.strftime('%b %d, %Y') }}<br>
+                                    <strong>Close:</strong> {{ opportunity.closing_date.strftime('%b %d, %Y') }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ opportunity.views_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ opportunity.applications|length }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('opportunities.opportunity_detail', opportunity_id=opportunity.id) }}" 
+                                       class="btn btn-outline-primary" target="_blank">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('opportunities.admin_edit_opportunity', opportunity_id=opportunity.id) }}" 
+                                       class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            onclick="confirmDelete({{ opportunity.id }}, '{{ opportunity.title }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-briefcase display-1 text-muted"></i>
+                                <h5 class="mt-3">No Opportunities Found</h5>
+                                <p class="text-muted">Create your first opportunity to get started.</p>
+                                <a href="{{ url_for('opportunities.admin_create_opportunity') }}" class="btn btn-primary">
+                                    Create Opportunity
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete opportunity: <strong id="deleteOpportunityTitle"></strong>?</p>
+                <p class="text-danger">This action cannot be undone. All applications for this opportunity will be preserved.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete Opportunity</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(opportunityId, opportunityTitle) {
+    document.getElementById('deleteOpportunityTitle').textContent = opportunityTitle;
+    document.getElementById('deleteForm').action = "{{ url_for('opportunities.admin_delete_opportunity', opportunity_id=0) }}".replace('0', opportunityId);
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('pipeline.list_pipelines') }}">Pipelines</a></li>
+            <li class="breadcrumb-item active">{{ pipeline.name }}</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ pipeline.name }}</h2>
+        <div>
+            <a href="{{ url_for('pipeline.manage_candidates', pipeline_id=pipeline.id) }}" 
+               class="btn btn-success">Manage Candidates</a>
+            <a href="{{ url_for('pipeline.list_pipelines') }}" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+    
+    <p>{{ pipeline.description }}</p>
+    
+    <!-- Pipeline Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Stages</h5>
+                    <h2 class="text-primary">{{ pipeline.stages|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Opportunities</h5>
+                    <h2 class="text-success" id="opportunitiesCount">{{ opportunities_using|length }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Opportunities Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Opportunities Using This Pipeline</h5>
+            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#addOpportunityCollapse">
+                <i class="fas fa-plus"></i> Add Opportunity
+            </button>
+        </div>
+        
+        <!-- Current Opportunities Table -->
+        <div class="card-body">
+            <div id="opportunitiesTable">
+                {% include 'partials/opportunities_table.html' %}
+            </div>
+        </div>
+        
+        <!-- Add Opportunity Collapse -->
+        <div class="collapse" id="addOpportunityCollapse">
+            <div class="card-body border-top">
+                <h6>Add Opportunity to Pipeline</h6>
+                <div class="mb-3">
+                    <select id="opportunitySelect" class="form-select">
+                        <option value="">Select Opportunity...</option>
+                        {% for opp in all_opportunities %}
+                        <option value="{{ opp.id }}">
+                            {{ opp.title }} 
+                            {% if opp.display_client %}({{ opp.display_client }}){% endif %}
+                            - {{ opp.status.value }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button id="addOpportunityBtn" class="btn btn-primary" onclick="addOpportunityToPipeline()">
+                    <i class="fas fa-plus"></i> Add to Pipeline
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pipeline Stages -->
+    <h4>Pipeline Stages</h4>
+    <div class="row">
+        {% for stage in pipeline.stages|sort(attribute='order') %}
+        <div class="col-md-4 mb-3">
+            <div class="card {% if stage.order == 1 %}border-primary{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        Stage {{ stage.order }}: {{ stage.name }}
+                    </h5>
+                    <p class="card-text">
+                        <strong>Type:</strong> {{ stage.stage_type.value.replace('_', ' ').title() }}<br>
+                        <strong>Duration:</strong> {{ stage.duration_minutes }} minutes
+                    </p>
+                    <div class="d-flex gap-2">
+                        {% if stage.stage_type.value in ['technical_test', 'personality_test'] %}
+                        <a href="{{ url_for('interview_questions.assign_to_stage', stage_id=stage.id) }}" 
+                           class="btn btn-outline-primary btn-sm">Manage Questions</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+const pipelineId = {{ pipeline.id }};
+const csrfToken = "{{ csrf_token() }}";
+
+function addOpportunityToPipeline() {
+    const select = document.getElementById('opportunitySelect');
+    const opportunityId = select.value;
+
+    if (!opportunityId) {
+        alert('Please select an opportunity');
+        return;
+    }
+
+    fetch(`/pipeline/${pipelineId}/opportunities/add`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ opportunity_id: opportunityId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Refresh opportunities table
+            fetchOpportunities();
+            // Clear selection
+            select.value = '';
+            // Close collapse
+            bootstrap.Collapse.getInstance(document.getElementById('addOpportunityCollapse')).hide();
+            // Show success message
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Error: ' + error);
+    });
+}
+
+function removeOpportunity(opportunityId, opportunityTitle) {
+    if (!confirm(`Remove "${opportunityTitle}" from pipeline?`)) {
+        return;
+    }
+
+    fetch(`/pipeline/${pipelineId}/opportunities/${opportunityId}/remove`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Refresh opportunities table
+            fetchOpportunities();
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.error);
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Error: ' + error);
+    });
+}
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.remove-btn');
+    if (!btn) return;
+
+    const opportunityId = btn.dataset.id;
+
+    let opportunityTitle;
+    try {
+        opportunityTitle = JSON.parse(btn.dataset.title); // tojson returns a JSON string
+    } catch (err) {
+        console.error("Failed to parse opportunity title:", btn.dataset.title, err);
+        opportunityTitle = btn.dataset.title; // fallback
+    }
+
+    removeOpportunity(opportunityId, opportunityTitle);
+}); // <-- fixed missing brace
+
+function fetchOpportunities() {
+    fetch(`/pipeline/${pipelineId}/opportunities/json`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update count
+            document.getElementById('opportunitiesCount').textContent = data.count;
+            // For simplicity, reload the page
+            window.location.reload();
+        }
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+
+
+{% endblock %}

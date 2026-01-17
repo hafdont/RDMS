@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% block title %} Sheets {% endblock %}
+
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">All Sheets</h1>
+    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#createSheetModal">
+        Create New Sheet
+    </button>
+
+
+    <div class="card h-100 text-center border-dashed" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#createSheetModal">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center text-muted">
+                <i class="fas fa-plus fa-2x mb-2"></i>
+                <strong>Add New Sheet</strong>
+            </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if sheets %}
+            <!-- Header row -->
+            <div class="row fw-bold text-muted px-3 mb-2">
+                <div class="col-md-4">Title</div>
+                <div class="col-md-2">Visibility</div>
+                <div class="col-md-2">Last Edited</div>
+                <div class="col-md-2">Created</div>
+                <div class="col-md-2 text-end">Actions</div>
+            </div>
+
+            <ul class="list-group list-group-flush">
+                {% for sheet in sheets %}
+                  <li class="list-group-item px-0 py-3 sheet-item" onclick="window.location='{{ url_for('sheet.view_sheet', sheet_id=sheet.id) }}'">
+                      <div class="row align-items-center px-3">
+                          <!-- Title -->
+                          <div class="col-md-4 d-flex align-items-center">
+                              <i class="fas fa-file-excel me-2" style="color: #17a2b8;"></i>
+                              <span class="fw-semibold">{{ sheet.title }}</span>
+                          </div>
+
+                          <!-- Visibility -->
+                          <div class="col-md-2">
+                              <i class="fas fa-user-shield me-1 text-muted"></i>
+                              <small>{{ sheet.visibility.name.replace('_', ' ').title() }}</small>
+                          </div>
+
+                          <!-- Last Edited -->
+                          <div class="col-md-2">
+                              <i class="fas fa-edit me-1 text-muted"></i>
+                              <small>{{ sheet.updated_at.strftime('%Y-%m-%d') if sheet.updated_at else sheet.created_at.strftime('%Y-%m-%d') }}</small>
+                          </div>
+
+                          <!-- Created At -->
+                          <div class="col-md-2">
+                              <i class="fas fa-calendar-alt me-1 text-muted"></i>
+                              <small>{{ sheet.created_at.strftime('%Y-%m-%d') }}</small>
+                          </div>
+
+                          <!-- Actions -->
+                          <div class="col-md-2 text-end">
+                              <div class="dropdown">
+                                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
+                                      Actions
+                                  </button>
+                                  <ul class="dropdown-menu dropdown-menu-end">
+                                     <li>
+                                      <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editPermModal{{ sheet.id }}">
+                                        Edit Permissions
+                                      </button>
+                                    </li>
+                                      <li>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSheet({{ sheet.id }})">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                      </li>
+                                      <li><a class="dropdown-item" href="{{ url_for('sheet.download_sheet', sheet_id=sheet.id) }}" onclick="event.stopPropagation();">Download as CSV</a></li>
+                                  </ul>
+                              </div>
+                          </div>
+
+
+                      </div>
+                  </li>
+
+                  <hr class="w-100">
+
+                  <!-- Modal (one per sheet) -->
+                  <div class="modal fade" id="editPermModal{{ sheet.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <form action="{{ url_for('sheet.update_permissions', sheet_id=sheet.id) }}" method="POST" class="modal-content">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Edit Permissions for "{{ sheet.title }}"</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="list-group">
+                            <label class="list-group-item">
+                              <input type="radio" name="visibility" value="department_restricted" {% if sheet.visibility.value == 'department_restricted' %}checked{% endif %}>
+                              My Department
+                            </label>
+                            <label class="list-group-item">
+                              <input type="radio" name="visibility" value="creator_all_except_interns" {% if sheet.visibility.value == 'creator_all_except_interns' %}checked{% endif %}>
+                              All Employees (except interns)
+                            </label>
+                            <label class="list-group-item">
+                              <input type="radio" name="visibility" value="creator_and_directors" {% if sheet.visibility.value == 'creator_and_directors' %}checked{% endif %}>
+                              Leadership Only
+                            </label>
+                            <label class="list-group-item">
+                              <input type="radio" name="visibility" value="creator_supervisors_directors" {% if sheet.visibility.value == 'creator_supervisors_directors' %}checked{% endif %}>
+                              Supervisors & Directors
+                            </label>
+                            <label class="list-group-item">
+                              <input type="radio" name="visibility" value="everyone" {% if sheet.visibility.value == 'everyone' %}checked{% endif %}>
+                              Everyone
+                            </label>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-primary">Save Permissions</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center text-muted">No sheets found. Create one to get started!</p>
+        {% endif %}
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- Modal for Creating a New Sheet -->
+<!-- Modal for Creating a New Sheet (Enhanced UI/UX) -->
+<div class="modal fade" id="createSheetModal" tabindex="-1" aria-labelledby="createSheetModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold" id="createSheetModalLabel">Create a New Sheet</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <!-- Make sure the action points to your sheet creation route -->
+      <form action="{{ url_for('sheet.create_sheet') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body pt-0">
+          
+          <!-- Step 1: Sheet Name -->
+          <div class="mb-4">
+            <label for="sheet-name-input" class="form-label">Sheet Name</label>
+            <input type="text" class="form-control" id="sheet-name-input" name="title" placeholder="e.g., Q3 Financial Report" required>
+          </div>
+
+          <!-- Step 2: Permissions -->
+          <div class="mb-3">
+            <label class="form-label mb-3">Who can see this sheet?</label>
+
+            <div class="list-group">
+
+              <!-- Department Restricted -->
+              <label class="list-group-item list-group-item-action d-flex gap-3 py-3" for="visibility-dept">
+                <input class="form-check-input flex-shrink-0" type="radio" name="visibility" id="visibility-dept" value="department_restricted" checked>
+                <span class="d-block">
+                  <strong class="fw-semibold">My Department</strong>
+                  <small class="d-block text-muted">Visible to me, my department members, supervisors, and directors.</small>
+                </span>
+              </label>
+
+              <!-- All Except Interns -->
+              <label class="list-group-item list-group-item-action d-flex gap-3 py-3" for="visibility-no-interns">
+                <input class="form-check-input flex-shrink-0" type="radio" name="visibility" id="visibility-no-interns" value="creator_all_except_interns">
+                <span class="d-block">
+                  <strong class="fw-semibold">All Employees</strong>
+                  <small class="d-block text-muted">Visible to everyone in the company, except for interns.</small>
+                </span>
+              </label>
+
+              <!-- Directors Only -->
+              <label class="list-group-item list-group-item-action d-flex gap-3 py-3" for="visibility-directors">
+                <input class="form-check-input flex-shrink-0" type="radio" name="visibility" id="visibility-directors" value="creator_and_directors">
+                <span class="d-block">
+                  <strong class="fw-semibold">Leadership Only</strong>
+                  <small class="d-block text-muted">Only visible to me and company directors.</small>
+                </span>
+              </label>
+
+              <!-- Private / Supervisors + Directors -->
+              <label class="list-group-item list-group-item-action d-flex gap-3 py-3" for="visibility-supervisors">
+                <input class="form-check-input flex-shrink-0" type="radio" name="visibility" id="visibility-supervisors" value="creator_supervisors_directors">
+                <span class="d-block">
+                  <strong class="fw-semibold">Supervisors & Directors</strong>
+                  <small class="d-block text-muted">Visible to me, supervisors, and directors.</small>
+                </span>
+              </label>
+
+
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Sheet</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Optional: Add a subtle hover effect to the permission options */
+  .list-group-item-action:hover {
+    background-color: #f8f9fa; /* A light grey */
+  }
+  /* Custom styles for sheet items */
+  .sheet-item {
+      display: block; /* Makes the entire link block-level to fill the space */
+      border-radius: 0.375rem; /* Matches Bootstrap's default border-radius */
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out, padding 0.2s ease-in-out; /* Added padding to transition */
+      margin-bottom: 0.75rem; /* Space between each sheet item */
+      padding: 0 0.5rem; /* Initial padding to ensure content isn't flush with edges */
+  }
+  /* Remove default list-group-item border and background */
+  .list-group-item {
+      border: none;
+      background-color: transparent; /* Ensures background is transparent to show .sheet-item styling */
+      padding-left: 0; /* Remove default list-group-item padding */
+      padding-right: 0; /* Remove default list-group-item padding */
+  }
+  /* Add a subtle shadow, lift, and horizontal padding effect on hover */
+  .sheet-item:hover {
+      transform: translateY(-3px); /* Lifts the card slightly */
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* More pronounced shadow on hover */
+      background-color: var(--bs-light); /* Optional: Light background on hover for visual feedback */
+      padding-left: 1.5rem; /* Increased left padding on hover */
+      padding-right: 1.5rem; /* Increased right padding on hover */
+  }
+  /* Style for the horizontal rule within the sheet item */
+  .sheet-item hr {
+      border-top: 1px solid rgba(0, 0, 0, 0.08); /* Lighter border for the hr */
+  }
+  /* Ensure the main card body doesn't have extra padding if not needed */
+  .card-body {
+      padding-top: 1rem;
+      padding-bottom: 0.5rem;
+  }
+</style>
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+  document.addEventListener('DOMContentLoaded', () => {
+
+    window.csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
+
+    window.deleteSheet = function(sheetId) {
+        if (!confirm('Are you sure you want to delete this sheet? This action cannot be undone.')) {
+            return;
+        }
+
+        fetch(`/sheets/${sheetId}/delete`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": window.csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({})  // <--- Explicit empty JSON
+        })
+        .then(async response => {
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                data = { error: "Invalid server response." };
+            }
+
+            if (response.ok && data.success) {
+                location.reload(); // success
+            } else {
+                alert(data.error || "Error occurred.");
+                location.reload(); // still reload to show flash
+            }
+        })
+        .catch(err => {
+            alert("A network error occurred while deleting the sheet.");
+            console.error("Delete error:", err);
+            location.reload();
+        });
+    };
+
+});
+</script>
+
+{% endblock %}

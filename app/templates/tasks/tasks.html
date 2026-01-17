@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+    {% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Task Dashboard for {{ target_user.full_name }}</h4>
+    <a href="{{ url_for('task.create_task') }}" class="btn btn-primary">+ Create Task</a>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+      <div class="list-group" id="task-sidebar">
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab='assigned') }}" 
+           class="list-group-item list-group-item-action {% if current_tab == 'assigned' %}active{% endif %}" 
+           data-tab="assigned">
+           Assigned
+        </a>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab='in_progress') }}" 
+           class="list-group-item list-group-item-action {% if current_tab == 'in_progress' %}active{% endif %}" 
+           data-tab="in_progress">
+           In Progress
+        </a>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab='paused') }}" 
+           class="list-group-item list-group-item-action {% if current_tab == 'paused' %}active{% endif %}" 
+           data-tab="paused">
+           Paused
+        </a>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab='under_review') }}" 
+           class="list-group-item list-group-item-action {% if current_tab == 'under_review' %}active{% endif %}" 
+           data-tab="under_review">
+           Under Review
+        </a>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab='rejected') }}" 
+           class="list-group-item list-group-item-action text-danger {% if current_tab == 'rejected' %}active{% endif %}" 
+           data-tab="rejected">
+           Rejected / Re-Assigned
+        </a>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab='overdue') }}" 
+           class="list-group-item list-group-item-action text-danger {% if current_tab == 'overdue' %}active{% endif %}" 
+           data-tab="overdue">
+           Overdue
+        </a>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab='engagements') }}" 
+           class="list-group-item list-group-item-action {% if current_tab == 'engagements' %}active{% endif %}" 
+           data-tab="engagements">
+           My Engagements
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+      <div id="task-content-wrapper">
+        {% if current_tab == 'engagements' %}
+          {% include 'partials/_engagement_list.html' %}
+        {% else %}
+          {% include 'partials/_task_list_table.html' %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('task-sidebar');
+    const contentWrapper = document.getElementById('task-content-wrapper');
+    
+    // --- FIX 1 ---
+    // The Jinja variable is 'target_user.id'
+    const targetUserId = {{ target_user.id }};
+
+    // --- FIX 2 ---
+    // We create the base URL *once* using the correct Jinja variable
+    const baseUrl = `{{ url_for('task.get_assigned_tasks', user_id=target_user.id) }}`;
+
+    // Main function to fetch and render content
+    async function loadContent(tab, page = 1) {
+      // Show a simple loading state
+      contentWrapper.innerHTML = '<div class="text-center p-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+      // Now we build the URL from our *JavaScript* variables
+      const url = `${baseUrl}?tab=${tab}&page=${page}&partial=true`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const html = await response.text();
+        contentWrapper.innerHTML = html;
+
+        // Update the active state in the sidebar
+        sidebar.querySelectorAll('.list-group-item').forEach(link => {
+          link.classList.toggle('active', link.dataset.tab === tab);
+        });
+        
+        // Update the browser URL without reloading
+        const cleanUrl = `${baseUrl}?tab=${tab}&page=${page}`;
+        window.history.pushState({ tab, page }, '', cleanUrl);
+
+      } catch (error) {
+        console.error('Fetch error:', error);
+        contentWrapper.innerHTML = '<div class="alert alert-danger">Error loading content. Please try again.</div>';
+      }
+    }
+
+    // 1. Handle clicks on the sidebar links
+    sidebar.addEventListener('click', function(e) {
+      if (e.target.matches('.list-group-item')) {
+        e.preventDefault(); // Stop the link from navigating
+        const tab = e.target.dataset.tab;
+        loadContent(tab, 1); // Load first page of the new tab
+      }
+    });
+
+    // 2. Handle clicks on pagination links (using event delegation)
+    contentWrapper.addEventListener('click', function(e) {
+      const pageLink = e.target.closest('a.page-link');
+      if (pageLink) {
+        e.preventDefault(); // Stop the link from navigating
+        
+        // Get the tab and page from the link's URL
+        const url = new URL(pageLink.href);
+        const tab = url.searchParams.get('tab') || 'assigned';
+        const page = url.searchParams.get('page') || '1';
+        
+        loadContent(tab, page);
+      }
+    });
+  });
+</script>
+{% endblock %}

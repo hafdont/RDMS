@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  #hot-container {
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+  }
+</style>
+
+<div class="container-fluid mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>{{ sheet.title }}</h2>
+    <span class="text-muted small">Created: {{ sheet.created_at.strftime('%Y-%m-%d') }}</span>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span id="modeBadge" class="badge bg-secondary">View Mode</span>
+    <div>
+      <button id="editToggle" class="btn btn-sm btn-outline-primary">Edit</button>
+      <button id="saveBtn" class="btn btn-sm btn-success ms-2" hidden>Save</button>
+    </div>
+  </div>
+
+  <div id="hot-container"></div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. DATA NORMALIZATION ---
+    // Standardize the data received from the server.
+    const sheetFromServer = {{ sheet_data | tojson | safe }};
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    let sheetData;
+
+    if (Array.isArray(sheetFromServer)) {
+      sheetData = sheetFromServer; // Data is a simple 2D array
+    } else if (sheetFromServer && Array.isArray(sheetFromServer.content)) {
+      sheetData = sheetFromServer.content; // Data is wrapped in a {content: ...} object
+    } else {
+      sheetData = [['']]; // Fallback for empty or unknown format
+      console.error('Unrecognized sheet data format:', sheetFromServer);
+    }
+
+    let hotInstance;
+    const container = document.getElementById('hot-container');
+    const editToggle = document.getElementById('editToggle');
+    const saveBtn = document.getElementById('saveBtn');
+    const modeBadge = document.getElementById('modeBadge');
+    let isEditMode = false;
+
+    // --- 2. UNIFIED RENDER FUNCTION ---
+    // This function creates the spreadsheet view for both modes.
+    function renderSheet(isEditable) {
+      if (hotInstance) {
+        hotInstance.destroy(); // Clear previous instance
+      }
+
+      hotInstance = new Handsontable(container, {
+        data: sheetData,
+        rowHeaders: true,
+        colHeaders: true,
+        contextMenu: isEditable, // Show context menu only when editing
+        stretchH: 'all',
+        width: '100%',
+        height: 600,
+        readOnly: !isEditable, // Key change: make the grid read-only in view mode
+        licenseKey: 'non-commercial-and-evaluation'
+      });
+
+      // Update UI buttons and badges
+      modeBadge.textContent = isEditable ? 'Edit Mode' : 'View Mode';
+      modeBadge.className = isEditable ? 'badge bg-warning text-dark' : 'badge bg-secondary';
+      editToggle.textContent = isEditable ? 'Cancel' : 'Edit';
+      saveBtn.hidden = !isEditable;
+    }
+
+    // --- 3. EVENT LISTENERS ---
+    editToggle.addEventListener('click', () => {
+      isEditMode = !isEditMode;
+      renderSheet(isEditMode);
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const updatedData = hotInstance.getData();
+
+      fetch(`/sheet/{{ sheet.id }}/save`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken
+         },
+        // --- 4. FIX SAVE PAYLOAD ---
+        // Send data in a clean {content: [[...], [...]]} format.
+        body: JSON.stringify({ content: updatedData })
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          // Update the local data and switch back to view mode without a page reload.
+          sheetData = updatedData;
+          isEditMode = false;
+          renderSheet(isEditMode);
+          Swal.fire('Saved!', 'Your changes have been saved.', 'success');
+        } else {
+          Swal.fire('Error', d.error || 'Save failed', 'error');
+        }
+      })
+      .catch(err => {
+        console.error('Save failed:', err);
+        Swal.fire('Error', 'An unexpected error occurred.', 'error');
+      });
+    });
+
+    // Initial render on page load
+    renderSheet(false);
+  });
+</script>
+{% endblock %}

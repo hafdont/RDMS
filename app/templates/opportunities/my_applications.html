@@ -1,0 +1,162 @@
+<!-- templates/opportunities/my_applications.html -->
+{% extends "base.html" %}
+
+{% block title %}My Applications - 3A CPA LLP{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">My Applications</h1>
+                <a href="{{ url_for('opportunities.careers') }}" class="btn btn-primary">
+                    <i class="bi bi-briefcase"></i> Browse Opportunities
+                </a>
+            </div>
+            
+            {% if applications %}
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Position</th>
+                                        <th>Client/Company</th>
+                                        <th>Applied Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for app in applications %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ app.opportunity.title }}</strong><br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-briefcase"></i> 
+                                                {{ app.opportunity.job_role.name if app.opportunity.job_role else app.opportunity.job_role_name }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {{ app.opportunity.display_client or '3A CPA LLP' }}<br>
+                                            <small class="text-muted">
+                                                <i class="bi bi-geo-alt"></i> 
+                                                {% if app.opportunity.is_remote %}Remote{% else %}{{ app.opportunity.location }}{% endif %}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {{ app.submitted_at.strftime('%b %d, %Y') }}<br>
+                                            <small class="text-muted">{{ app.submitted_at.strftime('%I:%M %p') }}</small>
+                                        </td>
+                                        <td>
+                                            {% if app.status.value == 'submitted' %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-clock"></i> Submitted
+                                                </span>
+                                            {% elif app.status.value == 'under_review' %}
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-eye"></i> Under Review
+                                                </span>
+                                            {% elif app.status.value == 'shortlisted' %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-star"></i> Shortlisted
+                                                </span>
+                                            {% elif app.status.value == 'called_for_interview' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-calendar-check"></i> Interview
+                                                </span>
+                                            {% elif app.status.value == 'rejected' %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-x-circle"></i> Rejected
+                                                </span>
+                                            {% elif app.status.value == 'draft' %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-file-earmark"></i> Draft
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ app.status.value|title }}</span>
+                                            {% endif %}
+                                            {% if app.is_recent %}
+                                                <span class="badge bg-light text-dark mt-1">New</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('opportunities.application_status', application_id=app.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                <a href="{{ url_for('opportunities.opportunity_detail', opportunity_id=app.opportunity.id) }}" 
+                                                   class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-briefcase"></i> Opportunity
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Card -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Total Applications</h6>
+                                <h2 class="mb-0">{{ applications|length }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Active</h6>
+                                <h2 class="mb-0">
+                                    {{ applications|selectattr('status.value', 'in', ['submitted', 'under_review', 'shortlisted', 'called_for_interview'])|list|length }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Interview</h6>
+                                <h2 class="mb-0">
+                                    {{ applications|selectattr('status.value', 'equalto', 'called_for_interview')|list|length }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Rejected</h6>
+                                <h2 class="mb-0">
+                                    {{ applications|selectattr('status.value', 'equalto', 'rejected')|list|length }}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4">
+                            <i class="bi bi-briefcase display-1 text-muted"></i>
+                        </div>
+                        <h3 class="text-muted mb-3">No Applications Yet</h3>
+                        <p class="text-muted mb-4">You haven't applied for any opportunities yet.</p>
+                        <a href="{{ url_for('opportunities.careers') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-briefcase"></i> Browse Opportunities
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

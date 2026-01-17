@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Task Analytics{% endblock %}
+{% block content %}
+<div class="container py-5">
+    
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'actions' %}active{% endif %}" href="{{ url_for('task.task_dashboard') }}">Action Required</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'workload' %}active{% endif %}" href="{{ url_for('task.task_dashboard_workload') }}">Team Workload</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'analytics' %}active{% endif %}" href="{{ url_for('task.task_dashboard_analytics') }}">Task Analytics</a>
+        </li>
+    </ul>
+
+    <h2 class="mt-4 mb-3">Task Analytics & Reports</h2>
+    
+    <div class="accordion" id="dashboardAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAssigned">...</h2>
+            <div id="assignedCollapse" class="accordion-collapse collapse show">
+                </div>
+        </div>
+
+        <div class="accordion-item">
+            </div>
+        
+        <div class="accordion-item">
+            </div>
+
+        </div>
+</div>
+{% endblock %}

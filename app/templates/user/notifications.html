@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+{# This new wrapper with a unique ID is the key to our solution #}
+<div id="notifications-page-wrapper">
+    <div class="container my-5">
+        <div class="notifications-container">
+            <div class="notifications-header">
+                <h1 class="mb-0">All Notifications</h1>
+                {# Use pagination.total for the count #}
+                {% if pagination.total > 0 %}
+                <span class="notification-count-badge">{{ pagination.total }}</span>
+                {% endif %}
+            </div>
+
+            <div class="notification-list" id="notification-list-container">
+                {# Iterate over the first page's items #}
+                {% if pagination.items %}
+                    {% for notif in pagination.items %}
+                        <div class="notification-row {% if not notif.read %}unread-notification{% endif %}" data-notif-id="{{ notif.id }}">
+                            <div class="notification-icon">
+                                <div class="icon-circle">
+                                    <i class="fas fa-info-circle fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="notification-body">
+                                <p class="notification-message mb-1">{{ notif.message }}</p>
+                                <small class="notification-timestamp text-muted">{{ timeAgo(notif.created_at) }}</small>
+                                <small class="notification-timestamp text-muted">{{ notif.created_at.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                            </div>
+                            <div class="notification-actions">
+                                <a href="{{ notif.url or '#' }}" class="btn btn-sm btn-outline-primary action-btn">View</a>
+                                <small class="notification-date text-muted">{{ notif.created_at.strftime('%B %d, %Y') }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center p-5">
+                        <p class="text-muted">You don't have any notifications yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            {# Only display the footer if there's a chance to load more #}
+            {% if pagination.has_next %}
+            <div class="notifications-footer" id="notifications-footer">
+                <button 
+                    class="btn btn-light load-more-btn" 
+                    id="load-more-notifications"
+                    data-next-page="{{ pagination.next_num }}"
+                    data-has-next="true"
+                >
+                    Load more
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Pass the API endpoint to the client-side script via a data attribute on the main-js script tag
+    // assuming 'main-js' ID exists on the main <script> tag.
+    const mainScript = document.getElementById('main-js');
+    if (mainScript) {
+        mainScript.dataset.notificationApiUrl = "{{ url_for('main.api_get_notifications_page') }}";
+    }
+</script>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}

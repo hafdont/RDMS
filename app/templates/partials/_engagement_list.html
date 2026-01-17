@@ -1,0 +1,58 @@
+
+<div class="mb-3">
+          <a href="{{ url_for('job.create_job') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i> New Engagement
+        </a>
+</div>
+
+
+<div class="accordion mt-3" id="engagementAccordion">
+  {% set engagements = pagination.items %}
+  {% for job in engagements %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{ job.id }}">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ job.id }}">
+        {{ job.name }} — {{ job.client.name if job.client else 'Internal' }}
+        ({% for service in job.services %}{{ service.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+      </button>
+    </h2>
+    <div id="collapse{{ job.id }}" class="accordion-collapse collapse" data-bs-parent="#engagementAccordion">
+      <div class="accordion-body">
+        <p><strong>Created By:</strong> {{ job.creator.full_name }}</p>
+        <p><strong>Created At:</strong> {{ job.created_at.strftime('%Y-%m-%d') }}</p>
+
+        <div class="">
+
+          <a class="dropdown-item" href="{{ url_for('job.view_job', job_id=job.id) }}">
+            <i class="fas fa-eye me-2"></i>View
+          </a>
+                              
+        </div>
+
+        </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No engagements found.</div>
+  {% endfor %}
+</div>
+
+<nav aria-label="Page navigation" class="mt-3">
+  <ul class="pagination">
+    <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab=current_tab, page=pagination.prev_num) }}">&laquo; Previous</a>
+    </li>
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if page_num %}
+        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab=current_tab, page=page_num) }}">{{ page_num }}</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('task.get_assigned_tasks', user_id=target_user.id, tab=current_tab, page=pagination.next_num) }}">Next &raquo;</a>
+    </li>
+  </ul>
+</nav>

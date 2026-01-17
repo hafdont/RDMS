@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Welcome to 3A CPA LLP{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="row mb-4">
+        <div class="col-12">
+        <h3>Welcome {{ user.first_name }}</h3>
+        </div>
+        <div class="col-md-4 col-lg-3 col-sm-6 mb-1">
+        <a href="{{ url_for('task.create_task') }}" class="btn btn-primary w-100">
+            <i class="fas fa-plus-circle me-2"></i>Create a New Task
+        </a>
+        </div>
+        <div class="col-md-4 col-lg-3 col-sm-6 mb-1">
+        <a class="btn btn-outline-primary w-100" href="{{ url_for('task.get_assigned_tasks', user_id=user.id) }}">
+            <i class="fas fa-tasks me-2"></i>See All Tasks
+        </a>
+        </div>
+    </div>
+
+  <hr>
+
+  <h4 class="mb-3">Your Active Tasks</h4>
+  <div class="row g-4">
+
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="dashboard-card text-center">
+        <div class="card-icon mb-2"><i class="fas fa-exclamation-triangle text-danger"></i></div>
+        <h5>Overdue</h5>
+        <div class="card-count text-danger">{{ overdue_tasks_count }}</div>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=user.id, tab='overdue') }}" class="card-footer-link">
+          View All <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="dashboard-card text-center">
+        <div class="card-icon mb-2"><i class="fas fa-sync-alt text-primary"></i></div>
+        <h5>In Progress</h5>
+        <div class="card-count text-primary">{{ in_progress_tasks_count }}</div>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=user.id, tab='in_progress') }}" class="card-footer-link">
+          View All <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="dashboard-card text-center">
+        <div class="card-icon mb-2"><i class="fas fa-plus-circle text-secondary"></i></div>
+        <h5>Newly Assigned</h5>
+        <div class="card-count text-secondary">{{ assigned_tasks_count }}</div>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=user.id, tab='assigned') }}" class="card-footer-link">
+          View All <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="dashboard-card text-center">
+        <div class="card-icon mb-2"><i class="fas fa-undo-alt text-warning"></i></div>
+        <h5>Rejected / Re-Assigned</h5>
+        <div class="card-count text-warning">{{ rejected_tasks_count }}</div>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=user.id, tab='rejected') }}" class="card-footer-link">
+          View All <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="dashboard-card text-center">
+        <div class="card-icon mb-2"><i class="fas fa-search text-info"></i></div>
+        <h5>Under Review</h5>
+        <div class="card-count text-info">{{ under_review_tasks_count }}</div>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=user.id, tab='under_review') }}" class="card-footer-link">
+          View All <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="dashboard-card text-center">
+        <div class="card-icon mb-2"><i class="fas fa-pause-circle text-secondary"></i></div>
+        <h5>Paused</h5>
+        <div class="card-count text-secondary">{{ paused_tasks_count }}</div>
+        <a href="{{ url_for('task.get_assigned_tasks', user_id=user.id, tab='paused') }}" class="card-footer-link">
+          View All <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+
+</div>
+
+    <hr class="my-4">
+
+    <h4 class="mb-3">Completed Tasks</h4>
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="dashboard-card text-center">
+            <div class="card-icon mb-2"><i class="fas fa-check-circle text-success"></i></div>
+            <h5>Completed</h5>
+            <div class="card-count text-success">{{ completed_tasks_count }}</div>
+            <a href="#" class="card-footer-link">
+            View All <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+        </div>
+    </div>
+
+</div>
+
+
+    <div class="mt-4 mb-4">
+        <h2 class="mb-3">Tasks Awaiting My Review</h2>
+        <div class="accordion" id="reviewAccordion">
+            
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingReview">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#awaitingReviewCollapse" aria-expanded="false" aria-controls="awaitingReviewCollapse">
+                        <strong>Standard Tasks for Approval</strong>
+                        <span class="badge bg-dark rounded-pill ms-2">{{ tasks_waiting_my_review|length }}</span>
+                    </button>
+                </h2>
+                <div id="awaitingReviewCollapse" class="accordion-collapse collapse" aria-labelledby="headingReview">
+                    <div class="card card-body">
+                        {% if tasks_waiting_my_review %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Title</th>
+                                        <th scope="col">Requested Review Date</th>
+                                        <th scope="col">Assigned To</th>
+                                        <th scope="col">Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in tasks_waiting_my_review %}
+                                    <tr>
+                                        <td><a class="text-decoration-none" href="{{ url_for('task.get_task', task_id=task.id)}}">{{ task.title }}</a></td>
+                                        <td>{{ task.updated_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ task.assignee.full_name | default('N/A') }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'danger' if task.priority.name == 'URGENT' else 'warning' if task.priority.name == 'HIGH' else 'info' if task.priority.name == 'MEDIUM' else 'success' }}">{{ task.priority.value }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No standard tasks awaiting your review.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            </div>
+    </div>
+{% endblock %}

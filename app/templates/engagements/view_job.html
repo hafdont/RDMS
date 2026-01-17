@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}Engagement: {{ job.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Engagement: {{ job.client.name }}</h2>
+    <p class="lead text-muted">Engagement description {{ job.name }}</p>
+    <small class="text-muted">Created: {{ job.created_local.strftime('%b %d, %Y %H:%M') }}</small>
+  </div>
+
+  <div class="row mb-4">
+    </div>
+
+      <div class="mb-4" id="review-partner-section">
+      {% if job.review_partner %}
+          <p class="mb-0"><strong>Review Partner:</strong> 
+              <span id="partner-name">{{ job.review_partner.first_name }} {{ job.review_partner.last_name }}</span>
+              <button class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#setPartnerModal">Change</button>
+          </p>
+      {% else %}
+          <div id="no-partner-set">
+              <span class="text-muted">No review partner has been set.</span>
+              <button class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#setPartnerModal">Set Partner</button>
+          </div>
+
+
+      {% endif %}
+      </div>
+
+                    <div class="mb-3 mt-3">
+                      <a href="{{ url_for('task.create_task', job_id=job.id, client_id=job.client_id) }}" class="btn btn-primary">
+                          <i class="fas fa-plus"></i> Add New Task to this Job
+                      </a>
+                    </div>
+
+                    
+      <hr>
+
+  <h5 class="mb-3">Monthly Tasks & Forms</h5>
+  {% if monthly_data %}
+    <div class="accordion" id="monthlyDataAccordion">
+      {% for month_str, data in monthly_data.items() %}
+        {% set accordion_id = month_str|replace('-', '')|replace(' ', '') %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading-{{ accordion_id }}">
+            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ accordion_id }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="collapse-{{ accordion_id }}">
+              <strong>{{ month_str }}</strong>
+              <span class="badge bg-secondary ms-3">{{ data.tasks|length }} Task(s)</span>
+            </button>
+          </h2>
+          <div id="collapse-{{ accordion_id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading-{{ accordion_id }}" data-bs-parent="#monthlyDataAccordion">
+            <div class="accordion-body">
+              
+              {% if data.tasks %}
+                <div class="row g-3">
+                  {% for task in data.tasks %}
+                    <div class="col-12 col-md-6 col-lg-4">
+                      <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                          <h6 class="card-title">{{ task.title }}</h6>
+                          <p class="small text-muted mb-2">
+                            Template: {{ task.task_template.title }}
+                          </p>
+                          <ul class="list-unstyled small mb-3">
+                            <li><strong>Assigned to:</strong> {{ task.assigned_to.first_name }} {{ task.assigned_to.last_name }}</li>
+                            {% if task.deadline_local %}
+                              <li><strong>Deadline:</strong> {{ task.deadline_local.strftime('%b %d, %Y %H:%M') }}</li>
+                            {% endif %}
+                            <li><strong>Est. time:</strong> {{ task.estimated_minutes }} min</li>
+                            <li><strong>Priority:</strong> {{ task.priority.value.capitalize() }}</li>
+                            <li><strong>Status:</strong> {{ task.status.value.capitalize() }}</li>
+                            {% if task.task_template and task.task_template.service %}
+                            <li><strong>Service:</strong> {{ task.task_template.service.name }}</li>
+                            {% endif %}
+                          </ul>
+
+                          <a href="{{ url_for('task.get_task', task_id=task.id) }}" class="btn btn-sm btn-outline-primary mt-auto mb-1">
+                            View Task
+                          </a>
+
+                          {% set is_tax_job = job.services|selectattr('name', 'equalto', 'Tax Services')|list|length > 0 %}
+                          
+                          {% if is_tax_job and task.task_template and task.task_template.title == 'VAT Returns' %}
+                          {% set vat_form = data.vat_form %}
+                            {% if vat_form %}
+                                <button type="button" class="btn btn-info btn-sm w-100" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#vatFormModal"
+                                        data-vat-url="{{ url_for('job.view_vat_form_for_job', job_id=job.id, month=vat_form.month) }}"
+                                        data-vat-save-url="{{ url_for('job.autosave_vat_form', job_id=job.id, month=vat_form.month) }}"                                        >
+                                  
+                                    Open VAT Form for {{ vat_form.month }}
+                                </button>
+                            {% else %}
+                              <form method="POST" action="{{ url_for('job.create_vat_form', job_id=job.id ) }}">
+                                <input type="hidden" name="month" value="{{ month_str }}">
+                                <button class="btn btn-outline-warning btn-sm w-100">+ Create VAT Form for {{ month_str }}</button>
+                              </form>
+                            {% endif %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-muted">No tasks are associated with this month.</p>
+              {% endif %}
+
+            </div>
+          </div>
+                    
+
+
+        </div>
+      {% endfor %}
+    
+    
+    </div>
+  {% else %}
+    <p class="text-muted">No tasks have been added to this engagement yet.</p>
+  {% endif %}
+
+  <div class="modal fade" id="vatFormModal" tabindex="-1" aria-labelledby="vatFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">VAT Form</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="vatFormModalContent">
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade" id="setPartnerModal" tabindex="-1" aria-labelledby="setPartnerModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="setPartnerModalLabel">Set Review Partner</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="setPartnerForm">
+            <div class="mb-3">
+                <label for="reviewPartnerSelect" class="form-label">Select Partner (Director)</label>
+                <select class="form-select" id="reviewPartnerSelect" name="review_partner_id" required>
+                    <option value="" disabled selected>Choose a partner...</option>
+                    {% for director in users %}
+                        <option value="{{ director.id }}" {% if job.review_partner_id == director.id %}selected{% endif %}>
+                            {{ director.first_name }} {{ director.last_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="partner-form-alert" class="alert alert-danger d-none" role="alert"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="savePartnerBtn">Save Partner</button>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const savePartnerBtn = document.getElementById('savePartnerBtn');
+    const partnerModalEl = document.getElementById('setPartnerModal');
+    const partnerModal = new bootstrap.Modal(partnerModalEl);
+    const partnerFormAlert = document.getElementById('partner-form-alert');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    savePartnerBtn.addEventListener('click', function() {
+        const partnerSelect = document.getElementById('reviewPartnerSelect');
+        const selectedPartnerId = partnerSelect.value;
+        const partnerName = partnerSelect.options[partnerSelect.selectedIndex].text;
+
+        if (!selectedPartnerId) {
+            partnerFormAlert.textContent = 'Please select a partner from the list.';
+            partnerFormAlert.classList.remove('d-none');
+            return;
+        } else {
+            partnerFormAlert.classList.add('d-none');
+        }
+
+        const url = `/jobs/{{ job.id }}/set-review-partner`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ 'review_partner_id': selectedPartnerId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                partnerModal.hide();
+                
+                const partnerSection = document.getElementById('review-partner-section');
+                
+                // Check if the partner display already exists, if not, create it
+                let partnerNameSpan = document.getElementById('partner-name');
+                if (!partnerNameSpan) {
+                     partnerSection.innerHTML = `
+                        <p class="mb-0"><strong>Review Partner:</strong> 
+                            <span id="partner-name"></span>
+                            <button class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#setPartnerModal">Change</button>
+                        </p>`;
+                     partnerNameSpan = document.getElementById('partner-name'); // Re-select the new span
+                }
+
+                // Update the name
+                partnerNameSpan.textContent = partnerName.trim();
+
+                // Hide the 'set partner' button if it exists
+                const noPartnerDiv = document.getElementById('no-partner-set');
+                if(noPartnerDiv) noPartnerDiv.style.display = 'none';
+
+            } else {
+                partnerFormAlert.textContent = data.message || 'An unknown error occurred.';
+                partnerFormAlert.classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            partnerFormAlert.textContent = 'A network error occurred. Please try again.';
+            partnerFormAlert.classList.remove('d-none');
+        });
+    });
+
+    // Clear alert when modal is closed
+    partnerModalEl.addEventListener('hidden.bs.modal', function () {
+        partnerFormAlert.classList.add('d-none');
+    });
+});
+</script>
+{% endblock %}

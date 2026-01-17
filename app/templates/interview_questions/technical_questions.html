@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Technical Questions</h2>
+        <a href="{{ url_for('interview_questions.new_technical_question') }}" class="btn btn-primary">
+            + New Technical Question
+        </a>
+    </div>
+
+    {% if questions %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Question</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Choices</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question in questions %}
+                        <tr>
+                            <td>
+                                <strong>{{ question.text[:100] }}{% if question.text|length > 100 %}...{% endif %}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'info' if question.question_type.value == 'multiple_choice' else 'warning' }}">
+                                    {{ question.question_type.value.replace('_', ' ').title() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if question.question_category %}
+                                <span class="badge bg-secondary">{{ question.question_category.name }}</span>
+                                {% else %}
+                                <span class="text-muted">Uncategorized</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if question.question_type.value == 'multiple_choice' %}
+                                {{ question.choices|length }} choices
+                                {% else %}
+                                <em>Open-ended</em>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('interview_questions.edit_technical_question', question_id=question.id) }}" 
+                                       class="btn btn-outline-primary">Edit</a>
+                                    <form method="POST" action="{{ url_for('interview_questions.delete_technical_question', question_id=question.id) }}"
+                                          onsubmit="return confirm('Delete this question?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4>No Technical Questions</h4>
+        <p>Get started by creating your first technical question.</p>
+        <a href="{{ url_for('interview_questions.new_technical_question') }}" class="btn btn-primary">
+            Create First Question
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

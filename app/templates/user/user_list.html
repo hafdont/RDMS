@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}3A CPA LLP'S EMPLOYEES{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <div class="dashboard-header">
+        <h3>Firm Employees</h3>
+        <p class="lead">Browse, filter, and manage all users in the system.</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card card-body mb-4">
+        <form method="GET" class="mb-0">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <label for="q" class="form-label">Search by Name/Email</label>
+                    <input type="text" name="q" id="q" class="form-control" value="{{ request.args.get('q', '') }}">
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <label for="department_id" class="form-label">Department</label>
+                    <select name="department_id" id="department_id" class="form-select">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if request.args.get('department_id') == dept.id|string %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <label for="role" class="form-label">Role</label>
+                    <select name="role" id="role" class="form-select">
+                        <option value="">All Roles</option>
+                        {% for r in RoleEnum %}
+                            <option value="{{ r.name }}" {% if request.args.get('role') == r.name %}selected{% endif %}>{{ r.value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-12 col-lg-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
+                    <a href="{{ url_for('user.get_users') }}" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Register new user -->
+    <a class="btn btn-login mb-4 p-2" href="{{ url_for('auth.register') }}">
+        <i class="fas fa-user-plus p-2 m-1"></i> Register New User
+    </a>
+
+    <!-- Users grouped by department -->
+    {% for dept_name, users in users_grouped.items() %}
+        <h4 class="mb-3">{{ dept_name }}</h4>
+        <div class="row">
+            {% for row in users %}
+                {% set user = row.user %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <a href=" {{url_for('user.profile_detail', user_id=user.id) }}" class="user-profile-card-link text-decoration-none">
+
+                        <div class="user-profile-card">
+                            <!-- Card header -->
+                            <div class="user-card-header">
+                                <p class="user-name">{{ user.full_name }}</p>
+                                <span class="user-role">{{ user.role.value }}</span>
+                            </div>
+
+                            <!-- Card body -->
+                            <div class="user-card-body">
+                                <div class="stat-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+                                        <div class="stat-info">
+                                            <p class="stat-value">{{ row.assigned }}</p>
+                                            <p class="stat-label">Assigned</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                                        <div class="stat-info">
+                                            <p class="stat-value">{{ row.completed }}</p>
+                                            <p class="stat-label">Completed</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-icon"><i class="fas fa-eye"></i></div>
+                                        <div class="stat-info">
+                                            <p class="stat-value">{{ row.review }}</p>
+                                            <p class="stat-label">In Review</p>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-icon"><i class="fas fa-redo-alt"></i></div>
+                                        <div class="stat-info">
+                                            <p class="stat-value">{{ row.redo }}</p>
+                                            <p class="stat-label">Redo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card footer -->
+                            <div class="user-card-footer d-flex justify-content-between">
+                                <span>Department: <strong>{{ user.department.name }}</strong></span>
+                                <a href="{{ url_for('task.get_assigned_tasks', user_id=user.id) }}">
+                                    {{ user.first_name }}'s Tasks
+                                </a>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

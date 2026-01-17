@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Personality Questions</h2>
+        <a href="{{ url_for('interview_questions.new_personality_question') }}" class="btn btn-primary">
+            + New Personality Question
+        </a>
+    </div>
+
+    {% if questions %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Question</th>
+                            <th>Trait Category</th>
+                            <th>Choices</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question in questions %}
+                        <tr>
+                            <td>
+                                <strong>{{ question.text[:100] }}{% if question.text|length > 100 %}...{% endif %}</strong>
+                            </td>
+                            <td>
+                                {% if question.personality_trait %}
+                                <span class="badge bg-info">{{  question.personality_trait.name }}</span>
+                                {% else %}
+                                <span class="text-muted">No trait</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ question.choices|length }} options
+                                {% if question.choices %}
+                                <br>
+                                <small class="text-muted">
+                                    Weights: 
+                                    {% for choice in question.choices %}
+                                        {% set trait_weight = choice.trait_weights[0] if choice.trait_weights else None %}
+                                        {% if trait_weight %}
+                                            {{ trait_weight.weight }}{% if not loop.last %}, {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('interview_questions.edit_personality_question', question_id=question.id) }}" 
+                                       class="btn btn-outline-primary">Edit</a>
+                                    <form method="POST" action="{{ url_for('interview_questions.delete_personality_question', question_id=question.id) }}"
+                                          onsubmit="return confirm('Delete this personality question?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4>No Personality Questions</h4>
+        <p>Create personality questions to assess candidate traits and match them to roles.</p>
+        <a href="{{ url_for('interview_questions.new_personality_question') }}" class="btn btn-primary">
+            Create First Personality Question
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

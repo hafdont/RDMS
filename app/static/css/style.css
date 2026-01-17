@@ -1,0 +1,1298 @@
+/* static/css/style.css */
+
+/* 1. Google Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+/* 2. CSS Variables for Corporate Colors */
+:root {
+  --primary-color: #ad2831; /* Maroon */
+  --dark-color: #000000;      /* Black */
+  --light-gray: #f4f4f4;      /* Light Gray for backgrounds */
+  --font-color: #333;         /* Dark gray for body text */
+  --border-color: #ddd;       /* Consistent border color */
+}
+
+/* 3. General Body Styling */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f1f3f7;
+  color: var(--font-color);
+}
+
+/* 4. Reusable Utility Classes */
+.text-primary {
+  color: var(--primary-color);
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.custom-border {
+  border: 1px solid var(--border-color);
+}
+
+/* 5. Hero Section Styling */
+.hero-section {
+  height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: url('/static/img/hero-bg.jpg') no-repeat center center/cover; /* Add a nice background image */
+  color: white;
+}
+
+.hero-section h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Typing effect cursor */
+.typing-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 3.5rem;
+  background-color: white;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+
+/* 6. Core Values Section Styling */
+.core-values-section {
+  padding: 80px 0;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 50px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.value-card {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.value-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 25px rgba(173, 40, 49, 0.1); /* Subtle maroon shadow on hover */
+}
+
+.value-card .icon {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.value-card h4 {
+  color: var(--dark-color);
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+/* 7. Stats Counter Section Styling */
+.stats-section {
+  padding: 80px 0;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.stat-item h2 {
+    font-size: 3.5rem;
+    font-weight: 700;
+}
+
+.stat-item p {
+    font-size: 1.2rem;
+}
+
+
+/* Add these new/updated styles to your existing style.css */
+
+/* 6. Core Values Section Styling (Updated) */
+.core-values-section {
+  padding: 60px 0; /* Reduced padding for carousel slide */
+  background-color: var(--light-gray); /* Ensure it has a background */
+  width: 100%;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 50px;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.value-card {
+  background-color: white;
+  padding: 25px; /* Slightly reduced padding */
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.value-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 25px rgba(173, 40, 49, 0.1);
+}
+
+.value-card .icon {
+  font-size: 2.5rem; /* Slightly smaller icon */
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.value-card h4 {
+  color: var(--dark-color);
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 1.15rem; /* Slightly smaller heading */
+}
+
+.value-card p {
+    font-size: 0.9rem; /* Slightly smaller paragraph text */
+}
+
+/* 8. Feature Section Styling (New) */
+.feature-section-container {
+    padding: 80px 0;
+    background-color: #ffffff; /* White background for the features area */
+}
+
+.feature-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 80px;
+}
+
+.feature-row:last-child {
+    margin-bottom: 0;
+}
+
+.feature-text {
+    padding: 0 40px;
+}
+
+.feature-text h2 {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.feature-image {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden; /* Ensures the image respects the border-radius */
+}
+
+.feature-image img {
+    width: 100%;
+    display: block;
+}
+
+/* Add these new styles to the bottom of your static/css/style.css file */
+
+/* 9. Login Page Styling */
+.login-page-container {
+    min-height: 100vh;
+    width: 100%;
+    background: var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.login-card {
+    border-radius: 15px;
+    overflow: hidden; /* Important for keeping child elements within the rounded corners */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.login-branding-section {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.login-branding-section h2 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.login-branding-section p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.login-form-section {
+    padding: 40px;
+    background-color: white;
+}
+
+.login-form-section h2 {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(173, 40, 49, 0.25);
+}
+
+.btn-login {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: bold;
+    padding: 10px 0;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-login:hover {
+    background-color: #8c2027; /* A slightly darker shade of maroon */
+    border-color: #8c2027;
+    transform: translateY(-2px);
+}
+
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 10. Registration Page & Reusable Form Styling */
+.registration-page-container {
+    min-height: 100vh;
+    width: 100%;
+    background: var(--light-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.registration-card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.registration-branding-section {
+    background-color: var(--dark-color); /* Using black for a different feel */
+    color: white;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.registration-branding-section h2 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: white; /* Explicitly set color for h2 */
+}
+
+.registration-branding-section p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* --- Reusable Form Classes --- */
+.form-wrapper {
+    padding: 40px;
+    background-color: white;
+}
+
+.form-header h2 {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.form-body .form-label {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+/* Style for select dropdowns to match inputs */
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(173, 40, 49, 0.25);
+}
+
+.form-footer {
+    margin-top: 1.5rem;
+}
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 11. Dashboard Styling */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+.dashboard-header .lead {
+    color: #6c757d;
+    font-size: 1.2rem;
+}
+
+.stat-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    text-decoration: none;
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 5px solid transparent; /* A subtle left border for accents */
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    color: var(--primary-color);
+}
+
+.stat-card .card-icon {
+    font-size: 3rem;
+    width: 60px; /* Fixed width for alignment */
+    text-align: center;
+    margin-right: 20px;
+}
+
+.stat-card .card-content h3 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.stat-card .card-content .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+/* Color accents for each card */
+.stat-card.users { border-left-color: #0d6efd; }
+.stat-card.users .card-icon { color: #0d6efd; }
+
+.stat-card.services { border-left-color: #6f42c1; }
+.stat-card.services .card-icon { color: #6f42c1; }
+
+.stat-card.clients { border-left-color: #198754; }
+.stat-card.clients .card-icon { color: #198754; }
+
+.stat-card.tasks { border-left-color: #fd7e14; }
+.stat-card.tasks .card-icon { color: #fd7e14; }
+
+.stat-card.engagements { border-left-color: var(--primary-color); }
+.stat-card.engagements .card-icon { color: var(--primary-color); }
+
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 12. User List Page Styling */
+.user-profile-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    text-decoration: none;
+    color: var(--dark-color);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 5px solid var(--primary-color);
+}
+
+.user-profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.user-card-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.user-card-header .user-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.user-card-header .user-role {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.user-card-body {
+    padding: 1rem;
+    flex-grow: 1; /* Allows the body to take up available space */
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    background-color: var(--light-gray);
+    padding: 0.75rem;
+    border-radius: 5px;
+}
+
+.stat-item .stat-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-right: 10px;
+    width: 25px; /* Fixed width for alignment */
+    text-align: center;
+}
+
+.stat-item .stat-info .stat-value {
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.stat-item .stat-info .stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.user-card-footer {
+    padding: 0.75rem 1rem;
+    background-color: var(--light-gray);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 14. Colorful Service Card Styling */
+.service-card {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    text-decoration: none;
+    color: var(--dark-color);
+    height: 100%;
+    position: relative;
+    overflow: hidden; /* Important for visual effects */
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+
+    /* We will set this dynamically from Jinja2 */
+    --accent-color: var(--primary-color);
+}
+
+.service-card:before { /* The color swoosh effect */
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 0;
+    width: 100%;
+    height: 120px;
+    background: var(--accent-color);
+    transform: skewY(-8deg);
+    transition: all 0.4s ease;
+}
+
+.service-card .card-icon {
+    position: relative; /* Bring icon above the swoosh */
+    width: 80px;
+    height: 80px;
+    background: #fff;
+    margin: 20px auto 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    box-shadow: 0 0 0 5px var(--accent-color);
+    transition: all 0.3s ease;
+}
+
+.service-card .card-body {
+    text-align: center;
+    padding: 1.5rem;
+    flex-grow: 1;
+}
+
+.service-card .card-title {
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+/* --- The HOVER Effects --- */
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.service-card:hover:before {
+    height: 100%; /* Expand the swoosh to fill the card */
+    transform: skewY(0deg);
+}
+
+.service-card:hover .card-icon {
+    background: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 0 0 5px #fff;
+    transform: scale(1.1);
+}
+
+.service-card:hover .card-title {
+    color: #fff; /* White text on hover */
+}
+
+.service-card:hover .card-text {
+    color: rgba(255, 255, 255, 0.85); /* Slightly transparent white text */
+}
+
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 15. User Profile Page Styling */
+.profile-header {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-right: 1.5rem;
+}
+
+.profile-info .profile-name {
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.profile-info .profile-role {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+/* Reusable Widget Card */
+.widget-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+    overflow: hidden; /* To keep rounded corners with the header */
+}
+
+.widget-card .widget-header {
+    padding: 1rem 1.5rem;
+    background-color: var(--light-gray);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.widget-card .widget-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+.widget-card .widget-body {
+    padding: 1.5rem;
+}
+
+/* Compact Stat Cards for Profile */
+.profile-stat-card {
+    background: var(--light-gray);
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.profile-stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.profile-stat-card .stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Styled List for User Details */
+.details-list {
+    list-style: none;
+    padding: 0;
+}
+
+.details-list li {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.details-list li:last-child {
+    border-bottom: none;
+}
+.details-list li i {
+    color: var(--primary-color);
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 16. Employee Task Dashboard Styling */
+.task-dashboard-header {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.task-dashboard-header h1 {
+    font-weight: 700;
+}
+
+/* The main container for a list of tasks (e.g., Overdue, In Progress) */
+.task-column {
+    background-color: var(--light-gray);
+    border-radius: 10px;
+    padding: 1rem;
+    height: 100%;
+}
+
+.task-column-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.task-column-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+.task-column .badge {
+    font-size: 1rem;
+}
+
+/* The individual task card */
+.task-card {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left-width: 5px; /* The priority border */
+}
+
+.task-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.task-card-title {
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 0.25rem;
+}
+
+.task-card-meta {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+.task-card-meta i {
+    margin-right: 5px;
+}
+
+/* Dynamic Priority Border Colors */
+.task-card--urgent { border-left-color: #dc3545; } /* Red */
+.task-card--high { border-left-color: #ffc107; }   /* Yellow */
+.task-card--medium { border-left-color: #0dcaf0; }/* Cyan */
+.task-card--low { border-left-color: #198754; }    /* Green */
+
+/* Improved Accordion Styling */
+.task-accordion .accordion-button {
+    font-weight: 700;
+}
+.task-accordion .accordion-button:not(.collapsed) {
+    background-color: var(--primary-color);
+    color: white;
+}
+.task-accordion .accordion-body {
+    padding: 0;
+}
+.task-accordion .table {
+    margin-bottom: 0;
+}
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 18. Task Detail Page Styling */
+.task-detail-header {
+    padding: 1.5rem;
+    background-color: var(--dark-color);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+.task-detail-header .task-title {
+    font-weight: 700;
+}
+.task-detail-header .task-status-badge {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.5em 1.2em;
+    background-color: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid white;
+}
+.task-detail-header .task-priority-badge {
+    background-color: rgba(255,255,255,0.9);
+    color: var(--dark-color);
+}
+
+/* Info Cards - Reusing and refining your design */
+.info-card {
+    border-left: 5px solid;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.info-card.deadline { border-color: var(--primary-color); }
+.info-card.assigned { border-color: #0d6efd; }
+.info-card.created { border-color: #6c757d; }
+.info-card.client { border-color: #198754; }
+
+/* Timeline Styles - Reusing and refining your design */
+.timeline-container {
+    position: relative;
+    padding-left: 20px;
+}
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 5px;
+    bottom: 5px;
+    width: 4px;
+    background-color: var(--light-gray);
+    border-radius: 2px;
+}
+.timeline-event .timeline-dot {
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border: 4px solid var(--primary-color);
+    border-radius: 50%;
+    z-index: 1;
+}
+/* etc. for other timeline styles you had */
+
+
+/* Stylish VAT Form Modal & Container */
+#vatFormChoiceModal .modal-content {
+    border-top: 5px solid var(--primary-color);
+}
+#vatFormChoiceModal .modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+#vatFormContainer {
+    border: 1px dashed var(--border-color);
+    padding: 1.5rem;
+    border-radius: 10px;
+    background-color: var(--light-gray);
+}
+#vatFormContainer h4 {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 20. Director's Task Dashboard Styling */
+
+/* Make tables inside widgets look cleaner */
+.widget-card .table {
+    margin-bottom: 0; /* Remove default bottom margin */
+}
+.widget-card .table thead th {
+    background-color: var(--light-gray);
+    border-bottom-width: 2px;
+    border-color: var(--border-color);
+    font-weight: 700;
+}
+.widget-card .table td {
+    vertical-align: middle;
+}
+
+/* Style for ranked lists */
+.ranked-list {
+    list-style: none;
+    padding-left: 0;
+}
+.ranked-list-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.ranked-list-item:last-child {
+    border-bottom: none;
+}
+.ranked-list-item .rank-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    width: 30px;
+    text-align: center;
+    margin-right: 1rem;
+}
+
+/* Modern pagination style */
+.pagination {
+    justify-content: end;
+}
+.pagination .page-link {
+    border-radius: 5px !important; /* Overwrite bootstrap default */
+    margin: 0 3px;
+    border: 1px solid var(--border-color);
+    color: var(--primary-color);
+}
+.pagination .page-link:hover {
+    background-color: var(--light-gray);
+}
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Add these new styles to your static/css/style.css file */
+
+/* 21. VAT Filing Form Styling */
+.filing-form-widget {
+    border-top: 5px solid var(--primary-color);
+}
+
+.filing-form-header {
+    text-align: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.filing-form-header h3 {
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 0;
+}
+.filing-form-header p {
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.form-section-header {
+    background-color: var(--light-gray);
+    padding: 0.75rem 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    margin: 0 -1.5rem 1.5rem; /* Extends to the edges of the widget-body */
+}
+
+/* This creates the two-column, table-like effect for each input row */
+.form-grid-row {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--light-gray);
+}
+.form-grid-row:last-of-type {
+    border-bottom: none;
+}
+.form-grid-row .form-label {
+    font-weight: 600;
+    margin-bottom: 0;
+    padding-right: 1rem;
+}
+
+/* Style for the summary section to make it stand out */
+.summary-row {
+    background-color: var(--light-gray);
+    border-top: 2px solid var(--border-color);
+    margin-top: 1rem;
+    font-size: 1.1rem;
+}
+.summary-row .form-label {
+    color: var(--primary-color);
+}
+
+/* 21. VAT Filing Form Styling (Refined) */
+/* The .form-grid-row and other styles from the previous step are still used */
+
+/* This new rule helps align the labels in our grid */
+.form-grid-row .form-label {
+    font-weight: 600;
+    margin-bottom: 0;
+    padding-right: 1rem;
+    /* This will right-align the text on medium screens and up */
+    text-align: end; 
+}
+
+/* On small screens, we'll revert to left-alignment */
+@media (max-width: 767.98px) {
+    .form-grid-row .form-label {
+        text-align: left;
+    }
+}
+
+/* By default, elements marked for 'edit' are hidden. */
+.edit-mode-element {
+    display: none!important;
+}
+
+/* Elements marked for 'view' are shown by default. */
+.view-mode-element {
+    display: initial!important; /* Or block/flex/etc., depending on original display type */
+}
+
+
+/* Edit Mode State (When container has the class 'edit-mode-active') */
+.edit-mode-active .edit-mode-element {
+    display: initial!important; /* Show edit elements */
+}
+
+.edit-mode-active .view-mode-element {
+    display: none!important; /* Hide view elements */
+}
+
+
+
+
+/* Styles based on tmp.html blueprint and common card structure */
+.dashboard-card, .dashboard-card-simple {
+  background: #fff;
+  border: 1px solid #e0e0e0; /* Added a subtle border for definition */
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 20px; /* Spacing between cards */
+  transition: all 0.2s ease;
+  height: 100%; /* Important for equal height in grid */
+  display: flex;
+  flex-direction: column;
+  text-decoration: none; /* Remove underline from card links */
+  color: inherit; /* Inherit text color for links */
+}
+
+.dashboard-card:hover, .dashboard-card-simple:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* For cards with a distinct footer (Intern/Manager Task Stats) */
+.card-link-wrapper {
+  flex-grow: 1; /* Pushes the footer to the bottom */
+  text-decoration: none; /* Remove underline from inner link */
+  color: inherit;
+  display: block; /* Make the whole area clickable */
+}
+
+.card-body-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-info-text h5 {
+  font-weight: 600;
+  margin: 0 0 5px 0;
+  color: #555;
+}
+
+.card-count {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.card-icon i {
+  font-size: 2.5rem;
+}
+
+/* Specific styling for the footer link */
+.card-footer-link {
+  display: block;
+  padding: 0.75rem 0; /* Padding inside the footer area */
+  font-weight: 500;
+  text-decoration: none;
+  color: #0d6efd; /* Primary Bootstrap color for links */
+  border-top: 1px solid #f1f1f1;
+  margin-top: 10px;
+}
+
+.card-footer-link.card-footer-stat {
+    padding: 0.75rem 1.5rem;
+    background-color: #f9f9f9;
+    border-radius: 0 0 10px 10px;
+    margin-top: 0;
+    border-top: 1px solid #e9ecef;
+    /* Overrides the default link style if a footer is desired */
+}
+
+.card-footer-link:hover {
+  text-decoration: underline;
+}
+
+/* For simple cards (Manager Engagements, Services, Departments) */
+.dashboard-card-simple .card-icon {
+  margin-bottom: 10px;
+}
+.dashboard-card-simple .card-count {
+    font-size: 1.5rem; /* Smaller count for simple cards */
+}
+
+
+
+/* 22. Notifications Page Styling */
+.notifications-container {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.notifications-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--light-gray);
+}
+
+.notifications-header h1 {
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: var(--dark-color);
+}
+
+.notification-count-badge {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50rem;
+    font-weight: 600;
+}
+
+.notification-list {
+    padding: 0 1.5rem;
+}
+
+.notification-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.notification-row:last-child {
+    border-bottom: none;
+}
+
+.notification-row:hover {
+    background-color: #fcfcfc;
+}
+
+/* Style for unread notifications */
+.unread-notification {
+    background-color: #fff9f9; /* Subtle red background */
+    border-left: 5px solid var(--primary-color);
+    padding-left: 1rem;
+}
+
+.unread-notification:hover {
+    background-color: #fdfdfd;
+}
+
+.notification-icon {
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.icon-circle {
+    /* Updated dimensions for the icon circle now that we only have the fallback icon */
+    width: 40px; 
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--light-gray);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 3px rgba(173, 40, 49, 0.1);
+}
+
+.notification-body {
+    flex-grow: 1;
+    margin-right: 1rem;
+}
+
+.notification-message {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.notification-timestamp {
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+}
+
+.notification-actions {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.notification-actions .action-btn {
+    margin-bottom: 0.5rem;
+}
+
+.notifications-footer {
+    text-align: center;
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--light-gray);
+}
+
+
+/* Simple view toggle styles */
+#prevVatSummaryTable.simple-view .detailed-col {
+    display: none;
+}
+
+/* In simple view, show only:
+   1. MONTH (col 1)
+   2. Sales Zero Rated (col 2)
+   3. Sales Exempt (col 3)
+   4. Sales @16% (col 4)
+   5. Sales @8% (col 5)
+   6. Total Sales (col 6)
+   7. Purchases Zero Rated (col 10)
+   8. Purchases Exempt (col 11)
+   9. Purchases @16% (col 12)
+   10. Purchases @8% (col 13)
+   11. Total Purchases (col 14)
+   12. Net VAT (col 20) 
+*/
+
+/* Make sure these columns are always visible */
+#prevVatSummaryTable.simple-view th:nth-child(1),
+#prevVatSummaryTable.simple-view td:nth-child(1),
+#prevVatSummaryTable.simple-view th:nth-child(2),
+#prevVatSummaryTable.simple-view td:nth-child(2),
+#prevVatSummaryTable.simple-view th:nth-child(3),
+#prevVatSummaryTable.simple-view td:nth-child(3),
+#prevVatSummaryTable.simple-view th:nth-child(4),
+#prevVatSummaryTable.simple-view td:nth-child(4),
+#prevVatSummaryTable.simple-view th:nth-child(5),
+#prevVatSummaryTable.simple-view td:nth-child(5),
+#prevVatSummaryTable.simple-view th:nth-child(6),
+#prevVatSummaryTable.simple-view td:nth-child(6),
+#prevVatSummaryTable.simple-view th:nth-child(10),
+#prevVatSummaryTable.simple-view td:nth-child(10),
+#prevVatSummaryTable.simple-view th:nth-child(11),
+#prevVatSummaryTable.simple-view td:nth-child(11),
+#prevVatSummaryTable.simple-view th:nth-child(12),
+#prevVatSummaryTable.simple-view td:nth-child(12),
+#prevVatSummaryTable.simple-view th:nth-child(13),
+#prevVatSummaryTable.simple-view td:nth-child(13),
+#prevVatSummaryTable.simple-view th:nth-child(14),
+#prevVatSummaryTable.simple-view td:nth-child(14),
+#prevVatSummaryTable.simple-view th:nth-child(20),
+#prevVatSummaryTable.simple-view td:nth-child(20) {
+    display: table-cell !important;
+}
+
+/* Highlight the Net VAT column */
+#prevVatSummaryTable.simple-view .net-vat-cell {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    border-left: 2px solid #dee2e6 !important;
+}
+
+/* Adjust table width in simple view */
+#prevVatSummaryTable.simple-view {
+    width: auto !important;
+}
+
+#prevVatSummaryTable.simple-view th,
+#prevVatSummaryTable.simple-view td {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+}
+

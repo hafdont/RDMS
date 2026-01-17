@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Welcome to Workflow{% endblock %}
+
+{% block content %}
+
+<div id="landingCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="8000">
+    <div class="carousel-inner">
+
+        <div class="carousel-item active">
+        <section class="core-values-section">
+            <div class="container">
+                <h2 class="section-title">Our Core Values</h2>
+                <p class="text-center lead mb-5">
+                    The principles that guide our mission to serve our clients better.
+                </p>
+                <div class="row g-4 justify-content-center">
+                    
+                    <div class="col-lg-4 col-md-6 d-flex align-items-stretch" data-aos="fade-up">
+                        <div class="value-card text-center">
+                            <div class="icon"><i class="fas fa-balance-scale"></i></div>
+                            <h4>Integrity</h4>
+                            <p>Grounded in belief that integrity is the foundation of righteous life, echoing imam Al-Ghazali’s Wisdom.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+                        <div class="value-card text-center">
+                            <div class="icon"><i class="fas fa-user-tie"></i></div>
+                            <h4>Professionalism</h4>
+                            <p>Defined by the combination of competence, compassion, and the highest ethical standards.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+                        <div class="value-card text-center">
+                            <div class="icon"><i class="fas fa-shield-alt"></i></div>
+                            <h4>Confidentiality</h4>
+                            <p>A shield of trust that safeguards the essence of our professional relationships.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="300">
+                        <div class="value-card text-center">
+                            <div class="icon"><i class="fas fa-users"></i></div>
+                            <h4>Teamwork</h4>
+                            <p>Acknowledging the strength in collaboration, because alone we can do so little; together we can do so much.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="400">
+                        <div class="value-card text-center">
+                            <div class="icon"><i class="fas fa-lightbulb"></i></div>
+                            <h4>Innovation</h4>
+                            <p>The pursuit of progress, challenging conventions to create lasting solutions. The value of an idea lies in using it.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="500">
+                        <div class="value-card text-center">
+                            <div class="icon"><i class="fas fa-book-reader"></i></div>
+                            <h4>Continuous Learning</h4>
+                            <p>Guided by the philosophy that change is constant, embracing learning as essential for professional growth.</p>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="text-center mt-5">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-dark btn-lg">Get Started</a>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <div class="carousel-item">
+            <div class="feature-section-container d-flex align-items-center" style="min-height: 90vh;">
+                <div class="container">
+                    <div class="row feature-row">
+                        <div class="col-lg-6 feature-text" data-aos="fade-right">
+                            <h2>Welcome to the Workflow Hub</h2>
+                            <p class="lead">Streamlining your practice with a smart, secure, and seamless web application designed for peak performance and intuitive collaboration.</p>
+                        </div>
+                        <div class="col-lg-6 feature-image" data-aos="zoom-in-left">
+                            <img src="{{ url_for('static', filename='img/311.jpg') }}" alt="Workflow Hub">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="carousel-item">
+            <div class="feature-section-container d-flex align-items-center" style="min-height: 90vh;">
+                <div class="container">
+                    <div class="row feature-row">
+                        <div class="col-lg-6 feature-image order-lg-1" data-aos="zoom-in-right">
+                            <img src="{{ url_for('static', filename='img/fancy_graph.jpg') }}" alt="Data-Driven Dashboards">
+                        </div>
+                        <div class="col-lg-6 feature-text order-lg-2" data-aos="fade-left">
+                            <h2>Data-Driven Dashboards</h2>
+                            <p class="lead">Get insights at a glance with intuitive visual analytics. Make informed decisions with real-time data tailored for CPAs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="carousel-item">
+            <div class="feature-section-container d-flex align-items-center" style="min-height: 90vh;">
+                <div class="container">
+                    <div class="row feature-row">
+                        <div class="col-lg-6 feature-text" data-aos="fade-right">
+                            <h2>Secure File Management</h2>
+                            <p class="lead">Upload, access, and organize your sensitive documents with the utmost confidence, compliance, and peace of mind.</p>
+                        </div>
+                        <div class="col-lg-6 feature-image" data-aos="zoom-in-left">
+                            <img src="{{ url_for('static', filename='img/blue_huey.jpg') }}" alt="Secure File Management">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#landingCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#landingCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#landingCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        <button type="button" data-bs-target="#landingCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+    </div>
+
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#landingCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#landingCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+{% endblock %}

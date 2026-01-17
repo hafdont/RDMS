@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('pipeline.list_pipelines') }}">Pipelines</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('pipeline.view_pipeline', pipeline_id=stage.pipeline.id) }}">{{ stage.pipeline.name }}</a></li>
+            <li class="breadcrumb-item active">Assign Questions</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Assign Questions to {{ stage.name }}</h2>
+        <a href="{{ url_for('pipeline.view_pipeline', pipeline_id=stage.pipeline.id) }}" class="btn btn-secondary">Back</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('interview_questions.assign_to_stage', stage_id=stage.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3">
+                    <h5>Available Questions</h5>
+                    <p class="text-muted">
+                        Stage Type: <strong>{{ stage.stage_type.value.replace('_', ' ').title() }}</strong>
+                    </p>
+                    
+                    {% if available_questions %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th width="50px">
+                                        <input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes()">
+                                    </th>
+                                    <th>Question</th>
+                                    <th>Type</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for question in available_questions %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="question_ids" value="{{ question.id }}" 
+                                               class="question-checkbox" 
+                                               {% if question in stage.questions %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <strong>{{ question.text[:80] }}{% if question.text|length > 80 %}...{% endif %}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'info' if question.question_type.value == 'multiple_choice' else 'warning' if question.question_type.value == 'open_ended' else 'success' }}">
+                                            {{ question.question_type.value.replace('_', ' ').title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if question.question_category %}
+                                        <span class="badge bg-secondary">{{ question.question_category.name }}</span>
+                                        {% else %}
+                                        <span class="text-muted">Uncategorized</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <h5>No Questions Available</h5>
+                        <p>
+                            No {{ stage.stage_type.value.replace('_', ' ') }} questions found. 
+                            You need to create questions first.
+                        </p>
+                        {% if stage.stage_type.value == 'technical_test' %}
+                        <a href="{{ url_for('interview_questions.new_technical_question') }}" class="btn btn-primary">
+                            Create Technical Questions
+                        </a>
+                        {% elif stage.stage_type.value == 'personality_test' %}
+                        <a href="{{ url_for('interview_questions.new_personality_question') }}" class="btn btn-primary">
+                            Create Personality Questions
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if available_questions %}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Assign Selected Questions</button>
+                    <a href="{{ url_for('pipeline.view_pipeline', pipeline_id=stage.pipeline.id) }}" class="btn btn-secondary">Cancel</a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAllCheckboxes() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.getElementsByClassName('question-checkbox');
+    
+    for (let checkbox of checkboxes) {
+        checkbox.checked = selectAll.checked;
+    }
+}
+
+// Update select all checkbox state
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.getElementsByClassName('question-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    
+    for (let checkbox of checkboxes) {
+        checkbox.addEventListener('change', function() {
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            selectAll.checked = allChecked;
+            selectAll.indeterminate = anyChecked && !allChecked;
+        });
+    }
+});
+</script>
+{% endblock %}

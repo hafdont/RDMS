@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}Director's Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="dashboard-header">
+        <h1>Welcome, {{ user.first_name }}!</h1>
+        <p class="lead">Here's a high-level overview of the firm's operations.</p>
+    </div>
+
+    <div class="row g-4">
+        
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('user.get_users') }}" class="stat-card users">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Users</h3>
+                    <p class="stat-number">{{ users_count }}</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('services.list_services')}}" class="stat-card services">
+                <div class="card-icon">
+                    <i class="fas fa-concierge-bell"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Services</h3>
+                    <p class="stat-number">{{ services_count }}</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('client.get_clients') }}" class="stat-card clients">
+                <div class="card-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Clients</h3>
+                    <p class="stat-number">{{ clients_count }}</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('task.task_dashboard')}}" class="stat-card tasks">
+                <div class="card-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Tasks</h3>
+                    
+                    {% if actionable_tasks_count > 0 %}
+                        <p class="stat-number text-danger">
+                            {{ actionable_tasks_count }} Action Required
+                            <span class="pulsing-dot"></span> {# A little visual alert #}
+                        </p>
+                    {% else %}
+                        <p class="stat-number">Manage</p> 
+                    {% endif %}
+                    </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('job.list_jobs')}}" class="stat-card engagements">
+                <div class="card-icon">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Engagements</h3>
+                    <p class="stat-number">{{ engagements_count }}</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('department.list_departments') }}" class="stat-card engagements"> 
+                <div class="card-icon">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Departments</h3>
+                    <p class="stat-number"></p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Add this card in your row of cards -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('recruitment.recruitment_dashboard') }}" class="stat-card recruitment">
+                <div class="card-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Recruitment</h3>
+                    <p class="stat-number">{{ pipelines_count }} Pipelines</p>
+                    <small class="text-muted">{{ active_candidates }} Active Candidates</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ url_for('recycle_bin.view_recycle_bin') }}" class="stat-card recycle-bin">
+                <div class="card-icon">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Recycle Bin</h3>
+                    <p class="stat-number" id="recycle-bin-stat">0 Items</p>
+                </div>
+            </a>
+        </div>
+                
+    </div>
+
+
+</div>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% block title %}Recruitment Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Recruitment</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Recruitment Dashboard</h1>
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                Quick Actions
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ url_for('pipeline.create_pipeline') }}">Create New Pipeline</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('interview_questions.technical_questions') }}">Add Questions</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('recruitment.all_candidates') }}">View All Candidates</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Recruitment Overview Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <a href="{{ url_for('pipeline.list_pipelines') }}" class="dashboard-card pipelines">
+                <div class="card-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Pipelines</h3>
+                    <p class="stat-number">{{ pipelines|length }}</p>
+                    <small class="text-muted">Active Recruitment Flows</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <a href="{{ url_for('recruitment.all_candidates') }}" class="dashboard-card candidates">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Candidates</h3>
+                    <p class="stat-number">{{ total_candidates }}</p>
+                    <small class="text-muted">{{ active_candidates }} Active</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <a href="{{ url_for('interview_questions.all_questions') }}" class="dashboard-card questions">
+                <div class="card-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Questions</h3>
+                    <p class="stat-number">Manage Bank</p>
+                    <small class="text-muted">Technical & Personality</small>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <a href="{{ url_for('interview_questions.job_roles') }}" class="dashboard-card roles">
+                <div class="card-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="card-content">
+                    <h3>Job Roles</h3>
+                    <p class="stat-number">Configure</p>
+                    <small class="text-muted">Role-Trait Matching</small>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="row g-4">
+        <!-- Left Column: Active Pipelines -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Active Pipelines</h5>
+                    <a href="{{ url_for('pipeline.create_pipeline') }}" class="btn btn-sm btn-primary">
+                        + New Pipeline
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if pipelines %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Pipeline Name</th>
+                                    <th>Stages</th>
+                                    <th>Candidates</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pipeline in pipelines %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ pipeline.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ pipeline.description[:50] }}{% if pipeline.description|length > 50 %}...{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        {% set stages = pipeline.stages|sort(attribute='order') %}
+                                        {% for stage in stages %}
+                                        <span class="badge bg-light text-dark mb-1">{{ stage.name }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% set candidate_count = pipeline.candidate_count if pipeline.candidate_count else 0 %}
+                                        <span class="fw-bold">{{ candidate_count }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('pipeline.view_pipeline', pipeline_id=pipeline.id) }}" 
+                                               class="btn btn-outline-primary">View</a>
+                                            <a href="{{ url_for('pipeline.manage_candidates', pipeline_id=pipeline.id) }}" 
+                                               class="btn btn-outline-success">Candidates</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                        <h5>No Pipelines Created</h5>
+                        <p class="text-muted">Create your first recruitment pipeline to get started.</p>
+                        <a href="{{ url_for('pipeline.new_pipeline') }}" class="btn btn-primary">
+                            Create First Pipeline
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Recent Activity & Quick Links -->
+        <div class="col-lg-4">
+            <!-- Recent Applications -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Applications</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_applications %}
+                    <div class="list-group list-group-flush">
+                        {% for candidate in recent_applications %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-primary rounded-circle">
+                                            {{ candidate.username[0]|upper }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-0">{{ candidate.biodata_entries.full_name if candidate.biodata_entries else candidate.username }}</h6>
+                                    <small class="text-muted">{{ candidate.email }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('recruitment.all_candidates') }}" class="btn btn-sm btn-outline-primary">
+                            View All Candidates
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No recent applications.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Links</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('interview_questions.technical_questions') }}" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-question-circle me-2"></i>Manage Technical Questions
+                        </a>
+                        <a href="{{ url_for('interview_questions.personality_questions') }}" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-brain me-2"></i>Manage Personality Questions
+                        </a>
+                        <a href="{{ url_for('interview_questions.manage_categories') }}" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-tags me-2"></i>Manage Categories
+                        </a>
+                                                <a href="{{ url_for('interview_questions.manage_personality_traits') }}" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-tags me-2"></i>Manage  Personality Traits
+                        </a>
+                        <a href="{{ url_for('interview_questions.job_roles') }}" class="btn btn-outline-primary text-start">
+                            <i class="fas fa-briefcase me-2"></i>Configure Job Roles
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-card {
+    display: block;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    height: 100%;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    text-decoration: none;
+    color: inherit;
+}
+.dashboard-card.pipelines { border-left: 4px solid #007bff; }
+.dashboard-card.candidates { border-left: 4px solid #28a745; }
+.dashboard-card.questions { border-left: 4px solid #ffc107; }
+.dashboard-card.roles { border-left: 4px solid #6f42c1; }
+
+.dashboard-card .card-icon {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: #666;
+}
+.dashboard-card .card-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #333;
+}
+.dashboard-card .stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.dashboard-card .text-muted {
+    font-size: 0.85rem;
+}
+
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.avatar-title {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

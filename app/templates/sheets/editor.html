@@ -1,0 +1,57 @@
+<!-- templates/sheets/edit.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Editing: {{ sheet.title }}</h2>
+  <p>Created on: {{ sheet.created_at.strftime('%Y-%m-%d') }}</p>
+
+  <!-- Handsontable container -->
+  <div id="spreadsheet" style="width: 100%; height: 500px;"></div>
+
+  <!-- Save button -->
+  <button id="saveBtn" class="btn btn-primary mt-3">Save Changes</button>
+</div>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    const container = document.getElementById("spreadsheet");
+    const data = {{ sheet.content|tojson }};
+    
+    const hot = new Handsontable(container, {
+      data: data,
+      rowHeaders: true,
+      colHeaders: true,
+      licenseKey: 'non-commercial-and-evaluation',
+      contextMenu: true,
+      manualRowResize: true,
+      manualColumnResize: true,
+      // other customization as needed
+    });
+
+    // Save button handler
+    document.getElementById("saveBtn").addEventListener("click", function () {
+      const updatedData = hot.getData();
+      fetch("{{ url_for('sheet.save_sheet', sheet_id=sheet.id) }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ content: updatedData }),
+      })
+      .then((response) => {
+        if (response.ok) {
+          alert("Sheet saved successfully!");
+        } else {
+          alert("Failed to save sheet.");
+        }
+      })
+      .catch(() => alert("Error while saving sheet."));
+    });
+  });
+</script>
+{% endblock %}

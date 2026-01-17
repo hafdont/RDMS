@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}User Edit {% endblock %}
+
+{% block content %}
+<div class="edit-page-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card registration-card">
+                    <div class="row g-0">
+
+                        <div class="col-12">
+                            <div class="form-wrapper">
+                                <div class="mb-3 text-center">
+                                    {# Check for a valid DigitalOcean image path #}
+                                    {% if user.profile_image_file and user.profile_image_file|length > 25 %}
+                                        <img class="img-fluid rounded-circle border shadow" 
+                                            src="{{ storage_service.get_file_url(user.profile_image_file) }}" 
+                                            alt="Profile Picture"
+                                            style="width: 120px; height: 120px; object-fit: cover;"
+                                            id="profilePreview"
+                                            onerror="this.style.display='none'; document.getElementById('edit-initials').style.display='flex';">
+                                        
+                                        {# Backup initials if the image fails to load #}
+                                        <div id="edit-initials" class="justify-content-center align-items-center rounded-circle border shadow mx-auto"
+                                            style="width: 120px; height: 120px; background-color: #007bff; color: #fff; font-size: 40px; font-weight: bold; display: none;">
+                                            {{ user.first_name[0]|upper }}{{ user.last_name[0]|upper }}
+                                        </div>
+                                    {% else %}
+                                        {# Standard Initials Fallback if no file is in DB #}
+                                        <div class="d-flex justify-content-center align-items-center rounded-circle border shadow mx-auto"
+                                            style="width: 120px; height: 120px; background-color: #007bff; color: #fff; font-size: 40px; font-weight: bold;">
+                                            {{ user.first_name[0]|upper }}{{ user.last_name[0]|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <form method="POST" enctype="multipart/form-data" class="form-body">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="first_name" class="form-label">First Name</label>
+                                            <input type="text" id="first_name" name="first_name" class="form-control" 
+                                                   value="{{ user.first_name }}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="middle_name" class="form-label">Middle Name</label>
+                                            <input type="text" id="middle_name" name="middle_name" class="form-control" 
+                                                   value="{{ user.middle_name }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="last_name" class="form-label">Last Name</label>
+                                            <input type="text" id="last_name" name="last_name" class="form-control" 
+                                                   value="{{ user.last_name }}" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="picture" class="form-label">Update Profile Picture</label>
+                                        <input type="file" id="picture" name="picture" class="form-control">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" id="email" name="email" class="form-control" 
+                                               value="{{ user.email }}" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="phone_number" class="form-label">Phone Number</label>
+                                        <input type="tel" id="phone_number" name="phone_number" class="form-control" 
+                                               value="{{ user.phone_number }}" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">New Password</label>
+                                        <input type="password" id="password" name="password" class="form-control" 
+                                               placeholder="Leave blank to keep current">
+                                    </div>
+
+                                    <div class="row mb-3">
+
+                                        
+                                        {% if current_user.role|lower in ['admin', 'supervisor', 'director'] %}
+                                        <div class="col-md-6">
+                                            <label for="role" class="form-label">Role</label>
+                                            <select id="role" name="role" class="form-select" required>
+                                                <option value="{{ user.role.name }}" selected>
+                                                    Currently: {{ user.role }}
+                                                </option>
+                                                {% for role in roles %}
+                                                    {% if role != user.role %}
+                                                        <option value="{{ role.name }}">{{ role.value.title() }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        {% endif %}
+
+                                        <div class="col-md-6">
+                                            <label for="department_id" class="form-label">Department</label>
+                                            <select id="department_id" name="department_id" class="form-select" required>
+                                                <option value="{{ user.department_id }}" selected>
+                                                    Currently: {{ user.department.name }}
+                                                </option>
+                                                {% for department in departments %}
+                                                    {% if department.id != user.department_id %}
+                                                        <option value="{{ department.id }}">{{ department.name }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-footer text-center">
+                                        <button type="submit" class="btn btn-login w-100">
+                                            <i class="fa-solid fa-save"></i> Save Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

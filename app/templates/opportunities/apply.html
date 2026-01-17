@@ -1,0 +1,500 @@
+<!-- templates/opportunities/apply.html -->
+{% extends "base.html" %}
+
+{% block title %}Apply for {{ opportunity.title }} - 3A CPA LLP{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Apply for Position</h1>
+                <a href="{{ url_for('opportunities.opportunity_detail', opportunity_id=opportunity.id) }}" 
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Opportunity
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Opportunity Summary -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ opportunity.title }}</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Client:</strong> {{ opportunity.display_client or '3A CPA LLP' }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Role:</strong> {{ opportunity.job_role.name if opportunity.job_role else opportunity.job_role_name }}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <strong>Location:</strong> {% if opportunity.is_remote %}Remote{% else %}{{ opportunity.location }}{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Application Closes:</strong> {{ opportunity.closing_date.strftime('%B %d, %Y') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('opportunities.apply_opportunity', opportunity_id=opportunity.id) }}" 
+                          enctype="multipart/form-data" id="applicationForm">
+                          
+                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <!-- Personal Information -->
+                        <div class="mb-4">
+                            <h5 class="card-title border-bottom pb-2">Personal Information</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="full_name" class="form-label">Full Name *</label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" 
+                                           value="{{ form_data.full_name or current_user.full_name }}" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ form_data.email or current_user.email }}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number *</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ form_data.phone or current_user.phone_number }}" required>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" 
+                                           value="{{ form_data.date_of_birth or '' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nationality" class="form-label">Nationality</label>
+                                    <input type="text" class="form-control" id="nationality" name="nationality" 
+                                           value="{{ form_data.nationality or '' }}">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="skills" class="form-label">Skills</label>
+                                    <input type="text" class="form-control" id="skills" name="skills" 
+                                           value="{{ form_data.skills or '' }}" 
+                                           placeholder="e.g., Accounting, Tax Preparation, QuickBooks">
+                                    <div class="form-text">Separate skills with commas</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3">{{ form_data.address or '' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Education History -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Education History</h5>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addEducation()">
+                                    <i class="bi bi-plus"></i> Add Education
+                                </button>
+                            </div>
+                            
+                            <div id="educationSection">
+                                {% if current_user.biodata_entries and current_user.biodata_entries.education_history %}
+                                    {% for edu in current_user.biodata_entries.education_history %}
+                                    <div class="card mb-3 education-entry" id="edu-entry-{{ loop.index0 }}">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="card-title mb-0">Education Entry</h6>
+                                                <button type="button" class="btn-close" onclick="removeEducation(this)"></button>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Institution *</label>
+                                                    <input type="text" class="form-control" 
+                                                        name="education_{{ loop.index0 }}_institution" 
+                                                        value="{{ edu.institution }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Qualification *</label>
+                                                    <input type="text" class="form-control" 
+                                                        name="education_{{ loop.index0 }}_qualification" 
+                                                        value="{{ edu.qualification }}" required>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Field of Study</label>
+                                                    <input type="text" class="form-control" 
+                                                        name="education_{{ loop.index0 }}_field_of_study" 
+                                                        value="{{ edu.field_of_study or '' }}">
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Grade/Score</label>
+                                                    <input type="text" class="form-control" 
+                                                        name="education_{{ loop.index0 }}_grade" 
+                                                        value="{{ edu.grade or '' }}">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Start Date *</label>
+                                                    <input type="date" class="form-control" 
+                                                        name="education_{{ loop.index0 }}_start_date" 
+                                                        value="{{ edu.start_date or '' }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">End Date</label>
+                                                    <input type="date" class="form-control" 
+                                                        name="education_{{ loop.index0 }}_end_date" 
+                                                        value="{{ edu.end_date or '' }}">
+                                                </div>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" 
+                                                    name="education_{{ loop.index0 }}_is_current" value="1"
+                                                    {% if edu.is_current %}checked{% endif %}>
+                                                <label class="form-check-label">Currently studying here</label>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control" name="education_{{ loop.index0 }}_description" rows="2">{{ edu.description or '' }}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <input type="hidden" id="education_count" name="education_count" 
+                                value="{{ current_user.biodata_entries.education_history|length if current_user.biodata_entries and current_user.biodata_entries.education_history else 0 }}">
+                        </div>
+
+                        <!-- Work Experience -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Work Experience</h5>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addWork()">
+                                    <i class="bi bi-plus"></i> Add Experience
+                                </button>
+                            </div>
+                            
+                            <div id="workSection">
+                                {% if current_user.biodata_entries and current_user.biodata_entries.work_experience %}
+                                    {% for work in current_user.biodata_entries.work_experience %}
+                                    <div class="card mb-3 work-entry" id="work-entry-{{ loop.index0 }}">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 class="card-title mb-0">Work Experience Entry</h6>
+                                                <button type="button" class="btn-close" onclick="removeWork(this)"></button>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Company *</label>
+                                                    <input type="text" class="form-control" 
+                                                        name="work_{{ loop.index0 }}_company" 
+                                                        value="{{ work.company }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Position *</label>
+                                                    <input type="text" class="form-control" 
+                                                        name="work_{{ loop.index0 }}_position" 
+                                                        value="{{ work.position }}" required>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">Start Date *</label>
+                                                    <input type="date" class="form-control" 
+                                                        name="work_{{ loop.index0 }}_start_date" 
+                                                        value="{{ work.start_date or '' }}" required>
+                                                </div>
+                                                <div class="col-md-6 mb-2">
+                                                    <label class="form-label">End Date</label>
+                                                    <input type="date" class="form-control" 
+                                                        name="work_{{ loop.index0 }}_end_date" 
+                                                        value="{{ work.end_date or '' }}">
+                                                </div>
+                                            </div>
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="checkbox" 
+                                                    name="work_{{ loop.index0 }}_is_current" value="1"
+                                                    {% if work.is_current %}checked{% endif %}>
+                                                <label class="form-check-label">Currently working here</label>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Responsibilities</label>
+                                                <textarea class="form-control" name="work_{{ loop.index0 }}_responsibilities" 
+                                                        rows="3">{{ work.responsibilities or '' }}</textarea>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label">Achievements</label>
+                                                <textarea class="form-control" name="work_{{ loop.index0 }}_achievements" 
+                                                        rows="2">{{ work.achievements or '' }}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <input type="hidden" id="work_count" name="work_count" 
+                                value="{{ current_user.biodata_entries.work_experience|length if current_user.biodata_entries and current_user.biodata_entries.work_experience else 0 }}">
+                        </div>
+
+                        <!-- Cover Letter & Resume -->
+                        <div class="mb-4">
+                            <h5 class="card-title border-bottom pb-2">Application Documents</h5>
+                            
+                            <div class="mb-3">
+                                <label for="cover_letter" class="form-label">Cover Letter *</label>
+                                <textarea class="form-control" id="cover_letter" name="cover_letter" rows="6" 
+                                          placeholder="Tell us why you're interested in this position and why you'd be a great fit..." 
+                                          required></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="resume" class="form-label">Resume/CV</label>
+                                <input type="file" class="form-control" id="resume" name="resume" 
+                                       accept=".pdf,.doc,.docx">
+                                <div class="form-text">Accepted formats: PDF, DOC, DOCX (Max: 5MB)</div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send-check"></i> Submit Application
+                            </button>
+                            <a href="{{ url_for('opportunities.opportunity_detail', opportunity_id=opportunity.id) }}" 
+                               class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Application Tips -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Application Tips</h6>
+                    <ul class="small text-muted">
+                        <li>Ensure all required fields are completed</li>
+                        <li>Tailor your cover letter to this specific opportunity</li>
+                        <li>Highlight relevant experience and qualifications</li>
+                        <li>Double-check your contact information</li>
+                        <li>Upload an updated resume/CV</li>
+                        <li>Be specific about your achievements and responsibilities</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Need Help?</h6>
+                    <p class="small text-muted">
+                        If you encounter any issues with your application, please contact our HR department:
+                    </p>
+                    <div class="small">
+                        <strong>Email:</strong> hr@3acpa.com<br>
+                        <strong>Phone:</strong> +254 700 000 000
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Education Template -->
+<template id="educationTemplate">
+    <div class="card mb-3 education-entry">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Education Entry</h6>
+                <button type="button" class="btn-close" onclick="removeEducation(this)"></button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Institution *</label>
+                    <input type="text" class="form-control" name="education_0_institution" required>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Qualification *</label>
+                    <input type="text" class="form-control" name="education_0_qualification" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Field of Study</label>
+                    <input type="text" class="form-control" name="education_0_field_of_study">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Grade/Score</label>
+                    <input type="text" class="form-control" name="education_0_grade">
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Start Date *</label>
+                    <input type="date" class="form-control" name="education_0_start_date" required>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="education_0_end_date">
+                </div>
+            </div>
+            
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" name="education_0_is_current" value="1">
+                <label class="form-check-label">Currently studying here</label>
+            </div>
+            
+            <div class="mb-2">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" name="education_0_description" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Work Experience Template -->
+<template id="workTemplate">
+    <div class="card mb-3 work-entry">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Work Experience Entry</h6>
+                <button type="button" class="btn-close" onclick="removeWork(this)"></button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Company *</label>
+                    <input type="text" class="form-control" name="work_0_company" required>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Position *</label>
+                    <input type="text" class="form-control" name="work_0_position" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Start Date *</label>
+                    <input type="date" class="form-control" name="work_0_start_date" required>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="work_0_end_date">
+                </div>
+            </div>
+            
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" name="work_0_is_current" value="1">
+                <label class="form-check-label">Currently working here</label>
+            </div>
+            
+            <div class="mb-2">
+                <label class="form-label">Responsibilities</label>
+                <textarea class="form-control" name="work_0_responsibilities" rows="3" 
+                          placeholder="Describe your key responsibilities and duties"></textarea>
+            </div>
+            
+            <div class="mb-2">
+                <label class="form-label">Achievements</label>
+                <textarea class="form-control" name="work_0_achievements" rows="2" 
+                          placeholder="Notable achievements or accomplishments"></textarea>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+let educationCount = {{ current_user.biodata_entries.education_history|length if current_user.biodata_entries and current_user.biodata_entries.education_history else 0 }};
+let workCount = {{ current_user.biodata_entries.work_experience|length if current_user.biodata_entries and current_user.biodata_entries.work_experience else 0 }};
+
+function addEducation() {
+    const template = document.getElementById('educationTemplate');
+    const clone = template.content.cloneNode(true);
+    const entry = clone.querySelector('.education-entry');
+    
+    // Update all field names with current count
+    const fields = entry.querySelectorAll('[name]');
+    fields.forEach(field => {
+        const oldName = field.getAttribute('name');
+        const newName = oldName.replace('_0_', `_${educationCount}_`);
+        field.setAttribute('name', newName);
+    });
+    
+    document.getElementById('educationSection').appendChild(entry);
+    document.getElementById('education_count').value = ++educationCount;
+}
+
+function removeEducation(button) {
+    const entry = button.closest('.education-entry');
+    entry.remove();
+    document.getElementById('education_count').value = --educationCount;
+}
+
+function addWork() {
+    const template = document.getElementById('workTemplate');
+    const clone = template.content.cloneNode(true);
+    const entry = clone.querySelector('.work-entry');
+    
+    // Update all field names with current count
+    const fields = entry.querySelectorAll('[name]');
+    fields.forEach(field => {
+        const oldName = field.getAttribute('name');
+        const newName = oldName.replace('_0_', `_${workCount}_`);
+        field.setAttribute('name', newName);
+    });
+    
+    document.getElementById('workSection').appendChild(entry);
+    document.getElementById('work_count').value = ++workCount;
+}
+
+function removeWork(button) {
+    const entry = button.closest('.work-entry');
+    entry.remove();
+    document.getElementById('work_count').value = --workCount;
+}
+
+// Only auto-add if there are no existing entries when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    if (educationCount === 0) {
+        addEducation();
+    }
+    if (workCount === 0) {
+        addWork();
+    }
+});
+
+// File size validation
+document.getElementById('resume')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('File size must be less than 5MB');
+        e.target.value = '';
+    }
+});
+</script>
+{% endblock %}

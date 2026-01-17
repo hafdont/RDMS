@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Manage Departments{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Manage Departments</h1>
+        <a href="{{ url_for('department.create_department') }}" class="btn btn-primary-brand">
+            <i class="fas fa-plus-circle me-2"></i> Add New Department
+        </a>
+    </div>
+
+    <div class="widget-card">
+        <div class="widget-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Department Name</th>
+                        <th>Assigned Reviewers</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept in departments %}
+                    <tr>
+                        <td class="align-middle">
+                            <a href="{{ url_for('department.get_department_details', dept_id=dept.id) }}" class="text-decoration-none">
+                                <strong>{{ dept.name }}</strong>
+                            </a>
+                        </td>
+                        <td class="align-middle">
+                            {% for reviewer in dept.reviewers %}
+                                <span class="badge bg-secondary">{{ reviewer.full_name }}</span>
+                            {% else %}
+                                <span class="text-muted">No reviewers assigned</span>
+                            {% endfor %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('department.department_reviewer', dept_id=dept.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit me-1"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,276 @@
+<!-- templates/opportunities/application_status.html -->
+{% extends "base.html" %}
+
+{% block title %}Application Status - 3A CPA LLP{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Application Status</h1>
+                    <a href="{{ url_for('opportunities.my_applications') }}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left"></i> Back to My Applications
+                    </a>
+                <a href="{{ url_for('opportunities.careers') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-briefcase"></i> View More Opportunities
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Application Details -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h5 class="card-title">{{ application.opportunity.title }}</h5>
+                            <p class="text-muted mb-0">
+                                Applied on {{ application.submitted_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge {% if application.status.value == 'submitted' %}bg-primary
+                                              {% elif application.status.value == 'under_review' %}bg-info
+                                              {% elif application.status.value == 'shortlisted' %}bg-warning
+                                              {% elif application.status.value == 'called_for_interview' %}bg-success
+                                              {% elif application.status.value == 'rejected' %}bg-danger
+                                              {% else %}bg-secondary{% endif %} fs-6">
+                                {{ application.status.value|replace('_', ' ')|title }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Status Timeline -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Application Progress</h6>
+                        <div class="timeline">
+                            <div class="timeline-item {% if application.status.value != 'draft' %}completed{% endif %}">
+                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Application Submitted</h6>
+                                    <small class="text-muted">{{ application.submitted_at.strftime('%b %d, %Y') }}</small>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {% if application.status.value in ['under_review', 'shortlisted', 'called_for_interview'] %}completed{% endif %}">
+                                <div class="timeline-marker {% if application.status.value in ['under_review', 'shortlisted', 'called_for_interview'] %}bg-success{% else %}bg-light{% endif %}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Under Review</h6>
+                                    <small class="text-muted">
+                                        {% if application.status.value in ['under_review', 'shortlisted', 'called_for_interview'] %}
+                                        Review started
+                                        {% else %}
+                                        Pending review
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {% if application.status.value in ['shortlisted', 'called_for_interview'] %}completed{% endif %}">
+                                <div class="timeline-marker {% if application.status.value in ['shortlisted', 'called_for_interview'] %}bg-success{% else %}bg-light{% endif %}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Shortlisted</h6>
+                                    <small class="text-muted">
+                                        {% if application.status.value == 'shortlisted' %}
+                                        You've been shortlisted
+                                        {% else %}
+                                        Awaiting decision
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {% if application.status.value == 'called_for_interview' %}completed{% endif %}">
+                                <div class="timeline-marker {% if application.status.value == 'called_for_interview' %}bg-success{% else %}bg-light{% endif %}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Interview</h6>
+                                    <small class="text-muted">
+                                        {% if application.status.value == 'called_for_interview' %}
+                                        Interview scheduled
+                                        {% else %}
+                                        Potential interview
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Steps -->
+                    {% if application.status.value == 'submitted' %}
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> What's Next?</h6>
+                        <p class="mb-0">Your application has been received and is awaiting review by our recruitment team. You'll be notified once your application status changes.</p>
+                    </div>
+                    {% elif application.status.value == 'under_review' %}
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-clock"></i> Currently Under Review</h6>
+                        <p class="mb-0">Our team is currently reviewing your application. This process typically takes 3-5 business days.</p>
+                    </div>
+                    {% elif application.status.value == 'shortlisted' %}
+                    <div class="alert alert-success">
+                        <h6><i class="bi bi-star"></i> Congratulations!</h6>
+                        <p class="mb-0">Your application has been shortlisted! Our team will contact you shortly to discuss next steps.</p>
+                    </div>
+                    {% elif application.status.value == 'called_for_interview' %}
+                    <div class="alert alert-success">
+                        <h6><i class="bi bi-calendar-check"></i> Interview Scheduled</h6>
+                        <p class="mb-0">Congratulations! You've been selected for an interview. Our HR team will contact you to schedule the interview details.</p>
+                    </div>
+                    {% elif application.status.value == 'rejected' %}
+                    <div class="alert alert-danger">
+                        <h6><i class="bi bi-x-circle"></i> Application Update</h6>
+                        <p class="mb-0">Thank you for your interest. Unfortunately, your application was not successful at this time. We encourage you to apply for other suitable opportunities.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Application Details -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Application Details</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Opportunity:</strong><br>
+                            {{ application.opportunity.title }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Applied Position:</strong><br>
+                            {{ application.opportunity.job_role.name if application.opportunity.job_role else application.opportunity.job_role_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Applicant:</strong><br>
+                            {{ application.applicant_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Email:</strong><br>
+                            {{ application.applicant_email }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Application ID:</strong><br>
+                            <code>
+                                APP-{{ "{:06d}".format(application.id) }}
+                            </code>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Updated:</strong><br>
+                            {% if application.reviewed_at %}
+                            {{ application.reviewed_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            {% else %}
+                            Not reviewed yet
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if application.biodata.resume_path %}
+                    <div class="mt-3">
+                        <a href="{{ url_for('static', filename='uploads/' + application.biodata.resume_path) }}" 
+                           class="btn btn-outline-primary btn-sm" target="_blank">
+                            <i class="bi bi-download"></i> Download Submitted Resume
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">Quick Actions</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('opportunities.opportunity_detail', opportunity_id=application.opportunity.id) }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> View Opportunity
+                        </a>
+                        <a href="{{ url_for('opportunities.careers') }}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-briefcase"></i> Browse Opportunities
+                        </a>
+                        {% if current_user.has_role('admin') or current_user.has_role('director') %}
+                        <a href="{{ url_for('opportunities.admin_applications') }}" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-gear"></i> Manage Applications
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Support -->
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Need Assistance?</h6>
+                    <p class="small text-muted">
+                        If you have questions about your application status, contact our HR team:
+                    </p>
+                    <div class="small">
+                        <strong>Email:</strong><br>
+                        <a href="mailto:hr@3acpa.com">hr@3acpa.com</a>
+                    </div>
+                    <div class="small mt-2">
+                        <strong>Phone:</strong><br>
+                        +254 700 000 000
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.7rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    z-index: 1;
+}
+
+.timeline-content {
+    padding-bottom: 0.5rem;
+}
+
+.timeline-item.completed .timeline-content {
+    opacity: 1;
+}
+
+.timeline-item:not(.completed) .timeline-content {
+    opacity: 0.7;
+}
+</style>
+{% endblock %}

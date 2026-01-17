@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Create a Task{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 border shadow">
+            <form action="{{ url_for('task.create_task') }}" method="POST" class="form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <h1 class="text-center mb-4">Create a New Task</h1>
+                
+                <div class="form-group mb-3">
+                    <label for="client">Client</label>
+                    {% if preselected_client %}
+                    <input type="text" class="form-control"
+                           value="{{ preselected_client.name }}"
+                           readonly>
+                    <input type="hidden" name="client_id"
+                           value="{{ preselected_client.id }}">
+                {% else %}
+                    <input type="text" class="form-control"
+                           id="client" name="client_name"
+                           placeholder="Start typing to search client..."
+                           autocomplete="off">
+                    <input type="hidden" id="client_id" name="client_id">
+                    <div id="client-suggestions"
+                         class="list-group"
+                         style="position:absolute; z-index:1000; width:95%; display:none;">
+                    </div>
+                {% endif %}
+                
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="service_id">Service</label>
+                        <select class="form-control" id="service_id" name="service_id">
+                            <option value="">-- Select Service --</option>
+                            {% for service in services %}
+                                <option value="{{ service.id }}">{{ service.name }}</option>
+                            {% endfor %}
+                        </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="task_template_id">Task Template</label>
+                    <select class="form-control" name="task_template_id" id="task_template_id" required>
+                        <option value="">-- Select Task Template --</option>
+                        {% for template in templates %}
+                        <option value="{{ template.id }}" 
+                                data-title="{{ template.title }}" 
+                                data-description="{{ template.description|e }}" 
+                                data-service-id="{{ template.service_id }}">
+                            {{ template.title }}
+                        </option>
+
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="title">Task Title</label>
+                    <input type="text" class="form-control" id="title" name="title" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"  required></textarea>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="assigned_to">Assign To</label>
+                    <select name="assigned_to" id="assigned_to" class="form-control" required>
+                        <option value="">-- Select User --</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="deadline">Task Deadline</label>
+                    <input type="datetime-local" class="form-control" id="deadline" name="deadline" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="estimated_time">Estimated Time</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="estimated_value" name="estimated_value" min="1" required>
+                        <select class="form-select" id="estimated_unit" name="estimated_unit" required>
+                            <option value="minutes" selected>Minutes</option>
+                            <option value="hours">Hours</option>
+                            <option value="days">Days</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="priority">Priority</label>
+                    <select class="form-control" id="priority" name="priority" required>
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM" selected>Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="URGENT">Urgent</option>
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="recurrence">Recurrence</label>
+                    <select class="form-control" id="recurrence" name="recurrence" required>
+                        <option value="NONE" selected>Not Recurring</option>
+                        <option value="WEEKLY">Weekly</option>
+                        <option value="MONTHLY">Monthly</option>
+                        <option value="YEARLY">Yearly</option>
+                    </select>
+                    <div class="form-text">
+                        Select how often this task should repeat.
+                    </div>
+                </div>
+
+
+                <input type="hidden" name="job_id" value="{{ preselected_job_id or '' }}">
+
+
+                <button type="submit" class="btn btn-primary mt-3 mb-3">Create Task</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+ 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+    $(document).ready(function() {
+        let typingTimer; // Timer identifier
+        const doneTypingInterval = 300; // Time in ms (0.3 seconds)
+        const clientInput = $('#client');
+        const clientIdHidden = $('#client_id');
+        const suggestionsContainer = $('#client-suggestions');
+
+        clientInput.on('input', function() {
+            clearTimeout(typingTimer);
+            clientIdHidden.val(''); // Clear hidden client_id immediately when user types
+            const query = $(this).val();
+
+            if (query.length < 2) {
+                suggestionsContainer.hide().empty(); // Hide and clear suggestions
+                return;
+            }
+
+            typingTimer = setTimeout(function() {
+                // Fetch suggestions after typing stops
+                fetchClientSuggestions(query);
+            }, doneTypingInterval);
+        });
+
+        function fetchClientSuggestions(query) {
+            console.log("Fetching suggestions for: " + query);
+            $.getJSON('/clients/search', { q: query }, function(data) {
+                const clients = data.clients;
+                let suggestionHtml = '';
+                if (clients && clients.length > 0) {
+                    clients.forEach(function(client) {
+                        suggestionHtml += `<a href="#" class="list-group-item list-group-item-action" data-id="${client.id}" data-name="${client.name}">${client.name}</a>`;
+                    });
+                    suggestionsContainer.html(suggestionHtml).show();
+                    console.log("Suggestions received:", clients);
+                } else {
+                    suggestionsContainer.hide().empty();
+                    // Optionally display a "No clients found" message
+                    suggestionsContainer.html('<div class="list-group-item text-muted">No clients found</div>').show();
+                }
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                console.error("AJAX Error: " + textStatus, errorThrown);
+                console.log("Response Text: " + jqXHR.responseText);
+                suggestionsContainer.hide().empty(); // Hide on error
+                alert('Error searching clients. Please try again.'); 
+            });
+        }
+
+        // Handle click on a suggestion
+        $(document).on('click', '#client-suggestions a', function(e) {
+            e.preventDefault();
+            const name = $(this).data('name');
+            const id = $(this).data('id');
+            clientInput.val(name);
+            clientIdHidden.val(id); // Set the hidden client_id
+            suggestionsContainer.hide().empty(); // Hide and clear
+            console.log("Selected client: " + name + " (ID: " + id + ")");
+        });
+
+        // Hide suggestions when clicking outside the input or suggestions
+        $(document).on('click', function(event) {
+            if (!$(event.target).closest('#client, #client-suggestions').length) {
+                suggestionsContainer.hide().empty();
+            }
+        });
+
+        // Set default for datetime-local to current local time if available
+        // This is optional, but good for user experience
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        $('#deadline').val(formattedDateTime);
+
+        // Optional: Clear client_id if user manually changes client_name after selection
+        clientInput.on('change', function() {
+            // If the text input value no longer matches the selected client's name,
+            // clear the hidden client_id. This helps prevent submitting an outdated ID.
+            if ($(this).val() !== clientIdHidden.data('selected-name')) {
+                clientIdHidden.val('');
+            }
+        });
+        // Store selected name on hidden input for comparison (add this to the click handler as well)
+        $(document).on('click', '#client-suggestions a', function(e) {
+            // ... existing code ...
+            clientIdHidden.data('selected-name', name); // Store selected name
+            // ... rest of code ...
+        });
+    });
+    </script>
+
+    <script>
+                document.getElementById('task_template_id').addEventListener('change', function () {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const title = selectedOption.getAttribute('data-title');
+                    const description = selectedOption.getAttribute('data-description');
+
+                    document.getElementById('title').value = title || '';
+                    document.getElementById('description').value = description || '';
+                });
+            </script>
+
+<script>
+    const serviceSelect = document.getElementById('service_id');
+    const templateSelect = document.getElementById('task_template_id');
+
+    serviceSelect.addEventListener('change', function () {
+        const selectedServiceId = this.value;
+
+        // Loop through all template options and show/hide based on service ID
+        Array.from(templateSelect.options).forEach(option => {
+            const templateServiceId = option.getAttribute('data-service-id');
+
+            if (!templateServiceId || selectedServiceId === "") {
+                option.style.display = 'none';
+            } else {
+                option.style.display = (templateServiceId === selectedServiceId) ? 'block' : 'none';
+            }
+        });
+
+        // Reset selection
+        templateSelect.value = "";
+        document.getElementById('title').value = "";
+        document.getElementById('description').value = "";
+    });
+</script>
+{% endblock %}
+

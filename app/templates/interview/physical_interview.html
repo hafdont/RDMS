@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center mb-4">
+                <h2>Physical Interview - Stage 3</h2>
+                <p class="lead">Final Interview Session</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    {% if interview_session %}
+                    <!-- Interview in progress -->
+                    <div class="alert alert-info">
+                        <h5>Interview Scheduled</h5>
+                        <p class="mb-2">
+                            <strong>Date & Time:</strong> 
+                            {{ interview_session.scheduled_time.strftime('%A, %B %d, %Y at %I:%M %p') }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Interviewer:</strong> 
+                            {{ interview_session.interviewer.biodata_entries.full_name if interview_session.interviewer.biodata_entries else interview_session.interviewer.email }}
+                        </p>
+                    </div>
+                    
+                    <div class="interview-info">
+                        <h5>Interview Details</h5>
+                        <ul>
+                            <li><strong>Duration:</strong> Approximately {{ candidate_stage.stage.duration_minutes }} minutes</li>
+                            <li><strong>Format:</strong> Face-to-face conversation with our team</li>
+                            <li><strong>Location:</strong> {{ interview_session.location or 'Main Office - Conference Room A' }}</li>
+                            <li><strong>What to bring:</strong> Government-issued ID, copies of your resume</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="preparation-tips mt-4">
+                        <h5>Preparation Tips</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6>📝 Before Interview</h6>
+                                        <ul class="small">
+                                            <li>Review your previous test results</li>
+                                            <li>Research our company and values</li>
+                                            <li>Prepare questions for the interviewer</li>
+                                            <li>Plan your route and arrive 15 minutes early</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6>💼 During Interview</h6>
+                                        <ul class="small">
+                                            <li>Maintain eye contact and positive body language</li>
+                                            <li>Listen carefully before answering</li>
+                                            <li>Provide specific examples from your experience</li>
+                                            <li>Be honest and authentic in your responses</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <!-- Waiting for scheduling -->
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-calendar-check fa-4x text-primary mb-3"></i>
+                        </div>
+                        <h4>Interview Pending Scheduling</h4>
+                        <p class="text-muted mb-4">
+                            Congratulations on completing the previous stages! 
+                            Our team will schedule your physical interview shortly.
+                        </p>
+                        <div class="alert alert-warning">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                You will receive an email with interview details once scheduled.
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('main.interviewee_dashboard') }}" class="btn btn-secondary">
+                            Back to Dashboard
+                        </a>
+                        {% if interview_session %}
+                        <button class="btn btn-outline-primary ms-2" onclick="window.print()">
+                            Print Details
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

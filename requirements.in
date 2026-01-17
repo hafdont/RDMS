@@ -1,0 +1,40 @@
+# Core Framework and Utilities
+Flask
+python-dotenv
+Werkzeug
+
+# Database and ORM
+Flask-SQLAlchemy
+PyMySQL
+SQLAlchemy
+
+# Flask Extensions
+Flask-Login
+Flask-Bcrypt
+Flask-Mail
+Flask-SocketIO
+Flask-Caching
+
+
+# Image Processing
+Pillow
+
+# Date/Time Handling
+pytz
+python-dateutil
+
+# Data Processing
+pandas
+
+# Additional required extensions
+Flask-Migrate
+Flask-WTF
+
+# Cryptography
+cryptography
+
+# Production WSGI Server
+gunicorn
+
+# Error Monitoring
+sentry-sdk

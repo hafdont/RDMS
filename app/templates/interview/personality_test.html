@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="text-center mb-4">
+                <h2>Personality Assessment - Stage 2</h2>
+                <p class="lead">Please answer honestly based on your natural preferences and tendencies.</p>
+                <div class="progress mb-3">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ progress_percentage }}%;" 
+                         aria-valuenow="{{ progress_percentage }}" 
+                         aria-valuemin="0" aria-valuemax="100">
+                        {{ current_question_index }} of {{ total_questions }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('interview.submit_personality_answer', candidate_stage_id=candidate_stage_id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="question_id" value="{{ question.id }}">
+                        
+                        <h4 class="mb-4 text-center">{{ question.text }}</h4>
+                        
+                        <div class="choices-container">
+                            {% for choice in question.choices %}
+                            <div class="card mb-3 choice-card">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" 
+                                               name="selected_choice" id="choice{{ choice.id }}" 
+                                               value="{{ choice.id }}"
+                                               required>
+                                        <label class="form-check-label w-100" for="choice{{ choice.id }}">
+                                            <h6 class="mb-1">{{ choice.text }}</h6>
+                                            {% if choice.description %}
+                                            <p class="text-muted mb-0 small">{{ choice.description }}</p>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            {% if current_question_index > 1 %}
+                            <button type="button" class="btn btn-secondary" 
+                                    onclick="window.location.href='{{ url_for('interview.personality_test', candidate_stage_id=candidate_stage_id, question_index=current_question_index-1) }}'">
+                                ← Previous
+                            </button>
+                            {% else %}
+                            <div></div>
+                            {% endif %}
+                            
+                            <button type="submit" class="btn btn-primary">
+                                {% if current_question_index == total_questions %}
+                                Complete Assessment ✓
+                                {% else %}
+                                Next Question →
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    Your responses help us understand your working style and find the best role fit.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.choice-card {
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+.choice-card:hover {
+    border-color: #007bff;
+    transform: translateY(-2px);
+}
+.choice-card .form-check-input:checked ~ .card-body {
+    background-color: #e7f3ff;
+}
+</style>
+{% endblock %}

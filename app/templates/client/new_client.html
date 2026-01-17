@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}New Client{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Add New Client</h2>
+
+                    <!-- Single Client Form -->
+                    <form id="single-client-form" method="POST" action="{{ url_for('client.create_client') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Client Name</label>
+                            <input type="text" class="form-control" id="name" name="name" placeholder="Client Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_email" class="form-label">Contact Email</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" placeholder="email@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="e.g. +1234567890">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Client</button>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <!-- Toggle for Bulk Upload -->
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="bulkSwitch">
+                        <label class="form-check-label" for="bulkSwitch">Bulk upload clients using CSV</label>
+                    </div>
+
+                    <!-- Bulk Upload Form -->
+                    <form id="bulk-upload-form" method="POST" enctype="multipart/form-data" action="{{ url_for('client.upload_clients_csv') }}" class="mt-3 d-none">
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">Upload CSV</label>
+                            <input type="file" class="form-control" id="csv_file" name="file" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-secondary w-100">Upload CSV</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bulkSwitch = document.getElementById('bulkSwitch');
+    const bulkForm = document.getElementById('bulk-upload-form');
+    const singleForm = document.getElementById('single-client-form');
+
+    bulkSwitch.addEventListener('change', () => {
+        if (bulkSwitch.checked) {
+            bulkForm.classList.remove('d-none');
+            singleForm.classList.add('d-none');
+        } else {
+            bulkForm.classList.add('d-none');
+            singleForm.classList.remove('d-none');
+        }
+    });
+
+    function redirectOnSuccess(form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: form.method,
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = `/clients/${data.id}`;
+                } else {
+                    response.json().then(data => alert(data.error || "An error occurred"));
+                }
+            }).catch(error => alert("Network error: " + error));
+        });
+    }
+
+</script>
+{% endblock %}

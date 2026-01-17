@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('recruitment.recruitment_dashboard') }}">Recruitment</a></li>
+            <li class="breadcrumb-item active">Personality Traits</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Personality Traits Management</h1>
+    </div>
+
+    <div class="row">
+        <!-- Add New Trait Form -->
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add New Personality Trait</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('interview_questions.new_personality_trait') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="form-group mb-3">
+                            <label for="name" class="form-label">Trait Name:</label>
+                            <input type="text" id="name" name="name" class="form-control" required 
+                                   placeholder="e.g., Focus, Problem-Solving, Work Style">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="description" class="form-label">Description:</label>
+                            <textarea id="description" name="description" class="form-control" rows="2"
+                                      placeholder="Brief description of this personality dimension..."></textarea>
+                        </div>
+                                                
+                        <button type="submit" class="btn btn-primary">Create Trait</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6>Example Traits from Your Document:</h6>
+                    <ul class="small">
+                        <li><strong>Focus</strong> - Detail-Oriented vs. Big-Picture</li>
+                        <li><strong>Problem-Solving</strong> - Analytical vs. Intuitive</li>
+                        <li><strong>Work Style</strong> - Systematic vs. Adaptable</li>
+                        <li><strong>Collaboration</strong> - Independent vs. Team-Oriented</li>
+                        <li><strong>Communication</strong> - Data-Driven vs. Interpersonal</li>
+                        <li><strong>Leadership</strong> - Task-Focused vs. People-Focused</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Traits List -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Existing Personality Traits</h5>
+                    <span class="badge bg-primary">{{ traits|length }} traits</span>
+                </div>
+                <div class="card-body">
+                    {% if traits %}
+                    <div class="list-group">
+                        {% for trait in traits %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        {{ trait.name }}
+                                        {% if trait.positive_pole and trait.negative_pole %}
+                                        <small class="text-muted">
+                                            ({{ trait.positive_pole }} vs {{ trait.negative_pole }})
+                                        </small>
+                                        {% endif %}
+                                    </h6>
+                                    
+                                    {% if trait.description %}
+                                    <p class="mb-2 text-muted small">{{ trait.description }}</p>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex gap-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-question-circle"></i>
+                                            Used in {{ trait.trait_weights|length }} question choices
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-briefcase"></i>
+                                            {{ trait.role_trait_weights|length }} job roles
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="btn-group btn-group-sm">
+                                    <!-- Edit Button (opens modal) -->
+                                    <button type="button" class="btn btn-outline-primary" 
+                                            data-bs-toggle="modal" data-bs-target="#editTraitModal{{ trait.id }}">
+                                        Edit
+                                    </button>
+                                    <form method="POST" action="{{ url_for('interview_questions.delete_personality_trait', trait_id=trait.id) }}"
+                                          onsubmit="return confirm('Delete this personality trait?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Edit Trait Modal -->
+                        <div class="modal fade" id="editTraitModal{{ trait.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Personality Trait</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('interview_questions.edit_personality_trait', trait_id=trait.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-body">
+                                            <div class="form-group mb-3">
+                                                <label for="edit_name{{ trait.id }}" class="form-label">Trait Name:</label>
+                                                <input type="text" id="edit_name{{ trait.id }}" name="name" 
+                                                       class="form-control" value="{{ trait.name }}" required>
+                                            </div>
+                                            
+                                            <div class="form-group mb-3">
+                                                <label for="edit_description{{ trait.id }}" class="form-label">Description:</label>
+                                                <textarea id="edit_description{{ trait.id }}" name="description" 
+                                                          class="form-control" rows="2">{{ trait.description or '' }}</textarea>
+                                            </div>
+                                            
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-brain fa-3x text-muted mb-3"></i>
+                        <h5>No Personality Traits</h5>
+                        <p class="text-muted">Create personality traits to measure in assessments.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6>Quick Actions</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('interview_questions.personality_questions') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-question-circle"></i> Manage Personality Questions
+                        </a>
+                        <a href="{{ url_for('interview_questions.job_roles') }}" class="btn btn-outline-success">
+                            <i class="fas fa-briefcase"></i> Configure Job Role Traits
+                        </a>
+                        <a href="{{ url_for('recruitment.recruitment_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Recruitment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.list-group-item {
+    border-left: 4px solid #6f42c1;
+}
+.modal-backdrop {
+    z-index: 1040;
+}
+.modal {
+    z-index: 1050;
+}
+</style>
+{% endblock %}

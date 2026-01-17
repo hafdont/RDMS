@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>My Interview Progress</h2>
+    
+    {% if current_pipeline %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">{{ current_pipeline.pipeline.name }}</h4>
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{ current_pipeline.pipeline.description }}</p>
+            
+            <!-- Progress Bar -->
+            <div class="progress mb-4" style="height: 25px;">
+                {% set completed_stages = current_pipeline.pipeline.stages|selectattr('completed', 'equalto', true)|list %}
+                {% set progress_percentage = (completed_stages|length / current_pipeline.pipeline.stages|length * 100) if current_pipeline.pipeline.stages|length > 0 else 0 %}
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {{ progress_percentage }}%;" 
+                     aria-valuenow="{{ progress_percentage }}" 
+                     aria-valuemin="0" aria-valuemax="100">
+                    {{ "%.0f"|format(progress_percentage) }}% Complete
+                </div>
+            </div>
+            
+            <!-- Stages Overview -->
+            <div class="row">
+                {% for stage in current_pipeline.pipeline.stages|sort(attribute='order') %}
+                {% set candidate_stage = current_pipeline.candidate_stages|selectattr('stage_id', 'equalto', stage.id)|first %}
+                <div class="col-md-4 mb-3">
+                    <div class="card {% if candidate_stage and candidate_stage.status == 'completed' %}border-success{% elif candidate_stage and candidate_stage.status == 'in_progress' %}border-primary{% else %}border-light{% endif %}">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                {% if candidate_stage and candidate_stage.status == 'completed' %}
+                                <span class="badge bg-success p-2">✓ Completed</span>
+                                {% elif candidate_stage and candidate_stage.status == 'in_progress' %}
+                                <span class="badge bg-primary p-2">In Progress</span>
+                                {% else %}
+                                <span class="badge bg-secondary p-2">Not Started</span>
+                                {% endif %}
+                            </div>
+                            
+                            <h5 class="card-title">Stage {{ stage.order }}</h5>
+                            <p class="card-text">{{ stage.name }}</p>
+                            <p class="text-muted small">{{ stage.stage_type.value.replace('_', ' ').title() }}</p>
+                            
+                            {% if candidate_stage %}
+                                {% if candidate_stage.status == 'completed' %}
+                                <a href="{{ url_for('interview.view_stage_results', candidate_stage_id=candidate_stage.id) }}" 
+                                   class="btn btn-outline-success btn-sm">View Results</a>
+                                {% elif candidate_stage.status == 'in_progress' %}
+                                <a href="{{ url_for('interview.start_stage', candidate_stage_id=candidate_stage.id) }}" 
+                                   class="btn btn-primary btn-sm">Continue</a>
+                                {% endif %}
+                            {% elif loop.index0 == 0 or (loop.index0 > 0 and (current_pipeline.pipeline.stages[loop.index0-1].candidate_stage.status == 'completed' if current_pipeline.pipeline.stages[loop.index0-1].candidate_stage else false)) %}
+                                <a href="{{ url_for('interview.start_stage', candidate_stage_id=stage.id) }}" 
+                                   class="btn btn-primary btn-sm">Start</a>
+                            {% else %}
+                                <button class="btn btn-outline-secondary btn-sm" disabled>Locked</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4>No Active Pipeline</h4>
+        <p>You haven't been assigned to any interview pipeline yet. Please wait for administrator assignment.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

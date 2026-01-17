@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="registration-page-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-11 col-xl-10">
+                <div class="card registration-card">
+                    <div class="row g-0">
+
+                        <div class="col-lg-5 d-none d-lg-block registration-branding-section" data-aos="fade-right">
+                            <i class="fas fa-users fa-3x mb-4"></i>
+                            <h2>Join the Team</h2>
+                            <p>Become a part of a collaborative environment where your skills contribute to our shared success. Welcome aboard.</p>
+                        </div>
+
+                        <div class="col-lg-7">
+                            <div class="form-wrapper">
+                                <div class="form-header text-center mb-4">
+                                    <h2>Create Your Account</h2>
+                                </div>
+                                <form method="POST" class="form-body">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="first_name" class="form-label">First Name</label>
+                                            <input type="text" id="first_name" name="first_name" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="middle_name" class="form-label">Middle Name</label>
+                                            <input type="text" id="middle_name" name="middle_name" class="form-control">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="last_name" class="form-label">Last Name</label>
+                                            <input type="text" id="last_name" name="last_name" class="form-control" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" id="email" name="email" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="phone_number" class="form-label">Phone Number</label>
+                                        <input type="tel" id="phone_number" name="phone_number" class="form-control" required>
+                                    </div>
+
+                                        <div class="row mb-3">
+                                            <div class="">
+                                                <label for="password" class="form-label">Password</label>
+                                                <div class="input-group">
+                                                    <input type="password" id="password" name="password" class="form-control" required>
+                                                    
+                                                    <button class="btn btn-outline-secondary" type="button" id="toggle-pw-btn">
+                                                        <i class="fa-solid fa-eye" id="toggle-pw-icon"></i>
+                                                    </button>
+                                                    
+                                                    <button class="btn btn-outline-secondary" type="button" id="generate-pw-btn">
+                                                        <i class="fa-solid fa-key"></i> Generate
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="">
+                                                <label for="confirm_password" class="form-label">Confirm Password</label>
+                                                <div class="input-group"> <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                                                    
+                                                    <button class="btn btn-outline-secondary" type="button" id="toggle-confirm-pw-btn">
+                                                        <i class="fa-solid fa-eye" id="toggle-confirm-pw-icon"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="role" class="form-label">Role</label>
+                                            <select id="role" name="role" class="form-select" required>
+                                                <option value="" disabled selected>Select Role...</option>
+                                                {% for role in roles %}
+                                                    <option value="{{ role.name }}">{{ role.value }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="department_id" class="form-label">Department</label>
+                                            <select id="department_id" name="department_id" class="form-select" required>
+                                                <option value="" disabled selected>Select Department...</option>
+                                                {% for department in departments %}
+                                                    <option value="{{ department.id }}">{{ department.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-footer text-center">
+                                        <button type="submit" class="btn btn-login w-100">
+                                            <i class="fa-solid fa-user-plus"></i> Register
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }} 
+<script>
+    // 1. The Password Generator Function
+    function generateStrongPassword() {
+        const length = 16;
+        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+        
+        let password = "";
+        let randomValues = new Uint32Array(length);
+        window.crypto.getRandomValues(randomValues);
+        
+        for (let i = 0; i < length; i++) {
+            password += charset[randomValues[i] % charset.length];
+        }
+        return password;
+    }
+
+    // 2. The Event Listener
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- Password Generator (Your existing code) ---
+        const generateBtn = document.getElementById('generate-pw-btn');
+        const passwordField = document.getElementById('password');
+        const confirmPasswordField = document.getElementById('confirm_password');
+
+        generateBtn.addEventListener('click', function() {
+            const newPassword = generateStrongPassword();
+            passwordField.value = newPassword;
+            confirmPasswordField.value = newPassword;
+        });
+
+        // --- NEW: Password Toggle Logic (Main Field) ---
+        const toggleBtn = document.getElementById('toggle-pw-btn');
+        const toggleIcon = document.getElementById('toggle-pw-icon');
+        
+        toggleBtn.addEventListener('click', function() {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            
+            if (type === 'text') {
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // --- NEW: Password Toggle Logic (Confirm Field) ---
+        const toggleConfirmBtn = document.getElementById('toggle-confirm-pw-btn');
+        const toggleConfirmIcon = document.getElementById('toggle-confirm-pw-icon');
+        
+        toggleConfirmBtn.addEventListener('click', function() {
+            const type = confirmPasswordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPasswordField.setAttribute('type', type);
+            
+            if (type === 'text') {
+                toggleConfirmIcon.classList.remove('fa-eye');
+                toggleConfirmIcon.classList.add('fa-eye-slash');
+            } else {
+                toggleConfirmIcon.classList.remove('fa-eye-slash');
+                toggleConfirmIcon.classList.add('fa-eye');
+            }
+        });
+
+    });
+</script>
+{% endblock %}

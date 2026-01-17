@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Task Dashboard{% endblock %}
+
+{% macro render_pagination(pagination, page_param_name, other_page_param_name, current_other_page) %}
+{# 
+    Renders pagination controls for the tasks dashboard.
+    - pagination: The Flask-SQLAlchemy Pagination object.
+    - page_param_name: The name of the current pagination URL parameter (e.g., 'page_vat').
+    - other_page_param_name: The name of the *other* pagination URL parameter (e.g., 'page_standard').
+    - current_other_page: The current value of the other pagination parameter, to be preserved.
+#}
+    <nav aria-label="Page navigation" class="mt-3">
+        <ul class="pagination pagination-sm justify-content-end">
+            {% set base_url = url_for('task.task_dashboard') %}
+            
+            {# Previous Button #}
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ base_url }}?{{ page_param_name }}={{ pagination.prev_num }}&{{ other_page_param_name }}={{ current_other_page }}">
+                    &laquo; Previous
+                </a>
+            </li>
+
+            {# Page Numbers #}
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ base_url }}?{{ page_param_name }}={{ page_num }}&{{ other_page_param_name }}={{ current_other_page }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {# Next Button #}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ base_url }}?{{ page_param_name }}={{ pagination.next_num }}&{{ other_page_param_name }}={{ current_other_page }}">
+                    Next &raquo;
+                </a>
+            </li>
+        </ul>
+    </nav>
+{% endmacro %}
+
+
+{% block content %}
+<div class="container py-5">
+    
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'actions' %}active{% endif %}" href="{{ url_for('task.task_dashboard') }}">Action Required</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'workload' %}active{% endif %}" href="{{ url_for('task.task_dashboard_workload') }}">Team Workload</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'analytics' %}active{% endif %}" href="{{ url_for('task.task_dashboard_analytics') }}">Task Analytics</a>
+        </li>
+    </ul>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Task Operations Dashboard</h1>
+            <p class="lead text-muted">A strategic overview of all firm tasks and team performance.</p>
+        </div>
+        <a href="{{ url_for('task.create_task') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle me-2"></i> Create New Task
+        </a>
+    </div>
+
+    <h2 class="mt-4 mb-3">Action Required</h2>
+
+    <!-- VAT PARTNER REVIEW SECTION -->
+    <div class="card shadow-sm mb-4">
+        <a class="card-header bg-danger text-white text-decoration-none d-flex justify-content-between align-items-center" 
+           data-bs-toggle="collapse" href="#vatReviewCollapse" role="button" aria-expanded="true" aria-controls="vatReviewCollapse">
+            <strong><i class="fas fa-file-invoice-dollar me-2"></i> VAT Partner Review Queue</strong>
+            <div>
+                <span class="badge bg-light text-danger me-2">Today ({{ todays_vat_tasks|length }})</span>
+                <span class="badge bg-secondary">Older ({{ older_vat_pagination.total }})</span>
+            </div>
+        </a>
+        <div class="collapse show" id="vatReviewCollapse">
+            <div class="card-body">
+                <h6 class="mb-2">
+                    <i class="fas fa-star text-warning me-1"></i> Submitted Today
+                </h6>
+                {% if todays_vat_tasks %}
+                    {% set tasks = todays_vat_tasks %}
+                    {% include 'partials/_task_review_table.html' %}
+                {% else %}
+                    <p class="text-muted small mb-3">No VAT tasks were submitted today.</p>
+                {% endif %}
+    
+                {% if older_vat_pagination.total > 0 %}
+                <p class="mt-3 mb-0">
+                    <a class="text-decoration-none" data-bs-toggle="collapse" href="#olderVATCollapse" role="button" aria-expanded="true" aria-controls="olderVATCollapse">
+                        <i class="fas fa-history me-1"></i>
+                        <strong>Older Pending VAT Tasks ({{ older_vat_pagination.total }})</strong>
+                    </a>
+                    <span class="small text-muted ms-2">Showing page {{ older_vat_pagination.page }} of {{ older_vat_pagination.pages }}</span>
+                </p>
+                <div class="collapse show" id="olderVATCollapse">
+                    {% set tasks = older_vat_tasks %}
+                    {% include 'partials/_task_review_table.html' %}
+                    
+                    {# VAT Pagination Controls #}
+                    {# FIX: Use the pagination object directly instead of request.args with type=int #}
+                    {{ render_pagination(
+                        older_vat_pagination, 
+                        'page_vat', 
+                        'page_standard', 
+                        older_standard_pagination.page 
+                    ) }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- STANDARD REVIEW SECTION -->
+    <div class="card shadow-sm mb-4">
+        <a class="card-header bg-primary text-white text-decoration-none d-flex justify-content-between align-items-center"
+           data-bs-toggle="collapse" href="#standardReviewCollapse" role="button" aria-expanded="true" aria-controls="standardReviewCollapse">
+            <strong><i class="fas fa-clipboard-list me-2"></i> Standard Task Review Queue</strong>
+            <div>
+                <span class="badge bg-light text-primary me-2">Today ({{ todays_standard_tasks|length }})</span>
+                <span class="badge bg-secondary">Older ({{ older_standard_pagination.total }})</span>
+            </div>
+        </a>
+        <div class="collapse show" id="standardReviewCollapse">
+             <div class="card card-body"> <h6 class="mb-2">
+                    <i class="fas fa-star text-warning me-1"></i> Submitted Today
+                </h6>
+                {% if todays_standard_tasks %}
+                    {% set tasks = todays_standard_tasks %}
+                    {% include 'partials/_task_review_table.html' %}
+                {% else %}
+                    <p class="text-muted small mb-3">No standard tasks were submitted today.</p>
+                {% endif %}
+    
+                {% if older_standard_pagination.total > 0 %}
+                <p class="mt-3 mb-0">
+                    <a class="text-decoration-none" data-bs-toggle="collapse" href="#olderStandardCollapse" role="button" aria-expanded="true" aria-controls="olderStandardCollapse">
+                        <i class="fas fa-history me-1"></i>
+                        <strong>Older Pending Tasks ({{ older_standard_pagination.total }})</strong>
+                    </a>
+                    <span class="small text-muted ms-2">Showing page {{ older_standard_pagination.page }} of {{ older_standard_pagination.pages }}</span>
+                </p>
+                <div class="collapse show" id="olderStandardCollapse">
+                    {% set tasks = older_standard_tasks %}
+                    {% include 'partials/_task_review_table.html' %}
+
+                    {# Standard Pagination Controls #}
+                    {# FIX: Use the pagination object directly instead of request.args with type=int #}
+                    {{ render_pagination(
+                        older_standard_pagination, 
+                        'page_standard', 
+                        'page_vat', 
+                        older_vat_pagination.page 
+                    ) }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    
+    </div>
+    </div>
+{% endblock %}

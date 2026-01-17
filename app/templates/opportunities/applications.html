@@ -1,0 +1,369 @@
+<!-- templates/opportunities/admin/applications.html -->
+{% extends "base.html" %}
+
+{% block title %}Manage Applications - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Manage Applications</h1>
+                <div>
+                    <a href="{{ url_for('opportunities.admin_opportunities') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-briefcase"></i> Manage Opportunities
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ applications|length }}</h4>
+                            <span>Total Applications</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-people display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ applications|selectattr('status.value', 'equalto', 'submitted')|list|length }}</h4>
+                            <span>New Applications</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-clock display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ applications|selectattr('status.value', 'equalto', 'shortlisted')|list|length }}</h4>
+                            <span>Shortlisted</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-star display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ applications|selectattr('status.value', 'equalto', 'called_for_interview')|list|length }}</h4>
+                            <span>Interview Stage</span>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-calendar-check display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="card">
+        <div class="card-body">
+            <!-- Filters -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <select class="form-select" id="statusFilter" onchange="filterApplications()">
+                        <option value="">All Statuses</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="shortlisted">Shortlisted</option>
+                        <option value="called_for_interview">Interview Stage</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="opportunityFilter" onchange="filterApplications()">
+                        <option value="">All Opportunities</option>
+                        {% for opportunity in applications|map(attribute='opportunity')|unique %}
+                        <option value="{{ opportunity.id }}">{{ opportunity.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Search applicants..." onkeyup="filterApplications()">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover" id="applicationsTable">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Opportunity</th>
+                            <th>Applied Date</th>
+                            <th>Status</th>
+                            <th>Experience</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for application in applications %}
+                        <tr class="application-row" 
+                            data-status="{{ application.status.value }}"
+                            data-opportunity="{{ application.opportunity.id }}"
+                            data-applicant="{{ application.applicant_name.lower() }}">
+                            <td>
+                                <div>
+                                    <strong>{{ application.applicant_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ application.applicant_email }}</small>
+                                    <br>
+                                    <small class="text-muted">{{ application.biodata.phone or 'No phone' }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <strong>{{ application.opportunity.title }}</strong>
+                                    <br>
+                                    <span class="badge {% if application.opportunity.opportunity_type.value == 'internal' %}bg-success{% else %}bg-primary{% endif %}">
+                                        {{ application.opportunity.opportunity_type.value|title }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    {{ application.submitted_at.strftime('%b %d, %Y') }}
+                                    <br>
+                                    <span class="text-muted">{{ application.submitted_at.strftime('%I:%M %p') }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm status-select" 
+                                        data-application-id="{{ application.id }}"
+                                        onchange="updateApplicationStatus(this)">
+                                    <option value="submitted" {% if application.status.value == 'submitted' %}selected{% endif %}>Submitted</option>
+                                    <option value="under_review" {% if application.status.value == 'under_review' %}selected{% endif %}>Under Review</option>
+                                    <option value="shortlisted" {% if application.status.value == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                                    <option value="called_for_interview" {% if application.status.value == 'called_for_interview' %}selected{% endif %}>Interview Stage</option>
+                                    <option value="rejected" {% if application.status.value == 'rejected' %}selected{% endif %}>Rejected</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    {% set total_exp = application.biodata.total_experience_years %}
+                                    {% if total_exp > 0 %}
+                                    <span class="badge bg-info">{{ "%.1f"|format(total_exp) }} years</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No experience</span>
+                                    {% endif %}
+                                    <br>
+                                    <span class="text-muted">
+                                        {{ application.biodata.skills|length if application.biodata.skills else 0 }} skills
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-primary" 
+                                            onclick="viewApplication({{ application.id }})">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" 
+                                            onclick="viewBiodata({{ application.biodata.id }})">
+                                        <i class="bi bi-person"></i>
+                                    </button>
+                                    {% if application.biodata.resume_path %}
+                                    <a href="{{ url_for('static', filename='uploads/' + application.biodata.resume_path) }}" 
+                                       class="btn btn-outline-success" target="_blank">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="bi bi-people display-1 text-muted"></i>
+                                <h5 class="mt-3">No Applications Found</h5>
+                                <p class="text-muted">Applications will appear here when candidates apply to your opportunities.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Details Modal -->
+<div class="modal fade" id="applicationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="applicationModalBody">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Biodata Modal -->
+<div class="modal fade" id="biodataModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Applicant Biodata</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="biodataModalBody">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+        const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        .getAttribute('content');
+
+
+    function filterApplications() {
+
+
+        const statusFilter = document.getElementById('statusFilter').value;
+        const opportunityFilter = document.getElementById('opportunityFilter').value;
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+        
+        const rows = document.querySelectorAll('.application-row');
+        
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            const opportunity = row.getAttribute('data-opportunity');
+            const applicant = row.getAttribute('data-applicant');
+            
+            const statusMatch = !statusFilter || status === statusFilter;
+            const opportunityMatch = !opportunityFilter || opportunity === opportunityFilter;
+            const searchMatch = !searchFilter || applicant.includes(searchFilter);
+            
+            if (statusMatch && opportunityMatch && searchMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function updateApplicationStatus(select) {
+        const applicationId = select.getAttribute('data-application-id');
+        const newStatus = select.value;
+
+        // Build the URL using the applicationId
+        const url = `/admin/application/${applicationId}/update_status`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken':csrfToken
+            },
+            body: `status=${newStatus}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Status updated successfully!', 'success');
+                const row = select.closest('tr');
+                row.setAttribute('data-status', newStatus);
+            } else {
+                showToast('Error updating status: ' + data.message, 'error');
+                select.value = select.getAttribute('data-previous-value');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error updating status', 'error');
+            select.value = select.getAttribute('data-previous-value');
+        });
+
+        select.setAttribute('data-previous-value', select.value);
+    }
+
+
+    function viewApplication(applicationId) {
+        fetch(`/admin/application/${applicationId}/details`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('applicationModalBody').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('applicationModal')).show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error loading application details', 'error');
+            });
+    }
+
+    function viewBiodata(biodataId) {
+        fetch(`/admin/biodata/${biodataId}/details`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('biodataModalBody').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('biodataModal')).show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error loading biodata', 'error');
+            });
+    }
+
+    function showToast(message, type = 'info') {
+        // Simple toast implementation - you might want to use a proper toast library
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
+    // Initialize status select values
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelects = document.querySelectorAll('.status-select');
+        statusSelects.forEach(select => {
+            select.setAttribute('data-previous-value', select.value);
+        });
+    });
+
+</script>
+{% endblock %}

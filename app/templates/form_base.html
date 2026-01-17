@@ -1,0 +1,60 @@
+<!-- templates/form_base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Document{% endblock %}</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; font-size: 14px; margin: 30px; }
+        .letterhead {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .letterhead img {
+            float: left;
+            width: 80px;
+            height: auto;
+        }
+        .letterhead .firm-info {
+            display: inline-block;
+            vertical-align: top;
+            margin-left: 100px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f1f1;
+        }
+        .section-title {
+            background-color: #004080;
+            color: white;
+            padding: 5px 10px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="letterhead">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Firm Logo">
+        <div class="firm-info">
+            <h2>3A CPA LLP</h2>
+            <p>P.O. Box 12345 - 00100 Nairobi, Kenya</p>
+            <p>Email: info@3allp.com | Phone: +254 723 666 555</p>
+        </div>
+    </div>
+
+    {% block content %}
+    <!-- Specific form content here -->
+    {% endblock %}
+</body>
+</html>

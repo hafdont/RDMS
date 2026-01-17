@@ -1,0 +1,59 @@
+<div class="table-responsive">
+    <table class="table table-hover table-sm mb-0 align-middle">
+        <thead class="table-light">
+            <tr>
+                <!-- Re-ordered and re-named columns as requested -->
+                <th style="width: 20%;">Client / Project</th>
+                <th style="width: 20%;">Service</th>
+                <th>Task Title</th>
+                <th style="width: 15%;">Assigned To</th>
+                <th style="width: 20%;">Task Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>
+                    {% if task.client %}
+                        {{ task.client.name }}
+                    {% elif task.job and task.job.client %}
+                        {{ task.job.client.name }}
+                    {% else %}
+                        <span class="text-muted fst-italic">3A CPA LLP (Internal)</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.job and task.job.service %}
+                        {{ task.job.service.name }}
+                    {% elif task.task_template and task.task_template.service %}
+                        {{ task.task_template.service.name }}
+                    {% else %}
+                        <span class="text-muted fst-italic">N/A</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a class="text-decoration-none fw-bold" href="{{ url_for('task.get_task', task_id=task.id) }}">{{ task.title }}</a>
+                </td>
+                <!-- Moved "Assigned To" before "Status" -->
+                <td>
+                    {{ task.assignee.full_name }}
+                    <small class="text-muted d-block">{{ task.assignee.department.name if task.assignee.department else 'No Dept' }}</small>
+                </td>
+                <!-- NEW "Task Status" column format -->
+                <td>
+                    <div>
+                        {% if task.status == TaskStatusEnum.PARTNER_REVIEW %}
+                            <span class="badge rounded-pill text-bg-danger">{{ task.status.value }}</span>
+                        {% else %}
+                            <span class="badge rounded-pill text-bg-info">{{ task.status.value }}</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted fw-bold">
+                        {{ get_next_reviewer_info(task) }}
+                    </small>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

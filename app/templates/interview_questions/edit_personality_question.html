@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('interview_questions.personality_questions') }}">Personality Questions</a></li>
+            <li class="breadcrumb-item active">Edit Question</li>
+        </ol>
+    </nav>
+
+    <h2>Edit Personality Question</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('interview_questions.edit_personality_question', question_id=question.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-group mb-3">
+                    <label for="text" class="form-label">Question Text:</label>
+                    <textarea id="text" name="text" class="form-control" rows="3" required>{{ question.text }}</textarea>
+                </div>
+                
+
+                <div class="form-group mb-4">
+                    <label for="trait_id" class="form-label">Personality Trait:</label>
+                    <select id="trait_id" name="trait_id" class="form-select" required>
+                        <option value="">Select Personality Trait</option>
+                        {% for trait in personality_traits %}
+                        <option value="{{ trait.id }}" 
+                                {% if question.choices and question.choices[0].trait_weights and question.choices[0].trait_weights[0].trait_id == trait.id %}selected{% endif %}>
+                            {{ trait.name }}
+                            {% if trait.positive_pole and trait.negative_pole %}
+                            ({{ trait.positive_pole }} vs {{ trait.negative_pole }})
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <h5>Answer Options</h5>
+                <p class="text-muted">Update choice texts and trait weights.</p>
+                
+                <div id="choicesContainer">
+                    {% for choice in question.choices %}
+                    {% set trait_weight = choice.trait_weights[0] if choice.trait_weights else None %}
+                    <div class="choice-item card mb-3">
+                        <div class="card-body">
+                            <!-- Hidden input to track choice IDs -->
+                            <input type="hidden" name="choice_id[]" value="{{ choice.id }}">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label class="form-label">Choice Text:</label>
+                                    <input type="text" name="choice_text[]" class="form-control" required 
+                                           value="{{ choice.text }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Trait Weight:</label>
+                                    <input type="number" name="choice_weight[]" class="form-control" min="-5" max="5" step="0.5" 
+                                           value="{{ trait_weight.weight if trait_weight else 0 }}" required>
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeChoice(this)">×</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="addChoice()">
+                    + Add Another Choice
+                </button>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <strong>Weight Guide:</strong> 
+                        Positive weights (+1 to +5) indicate stronger alignment with the trait. 
+                        Negative weights (-1 to -5) indicate weaker alignment or opposite tendency.
+                    </small>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Update Personality Question</button>
+                    <a href="{{ url_for('interview_questions.personality_questions') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function addChoice() {
+    const container = document.getElementById('choicesContainer');
+    const newChoice = document.createElement('div');
+    newChoice.className = 'choice-item card mb-3';
+    newChoice.innerHTML = `
+        <div class="card-body">
+            <!-- Hidden input for new choice, value is set to "new" to differentiate from existing choices -->
+            <input type="hidden" name="choice_id[]" value="new">
+            <div class="row">
+                <div class="col-md-8">
+                    <label class="form-label">Choice Text:</label>
+                    <input type="text" name="choice_text[]" class="form-control" required 
+                           placeholder="Enter choice text...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Trait Weight:</label>
+                    <input type="number" name="choice_weight[]" class="form-control" min="-5" max="5" step="0.5" value="0" required>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger" onclick="removeChoice(this)">×</button>
+                </div>
+            </div>
+        </div>
+    `;
+    container.appendChild(newChoice);
+}
+
+function removeChoice(button) {
+    if (document.querySelectorAll('.choice-item').length > 2) {
+        button.closest('.choice-item').remove();
+    } else {
+        alert('At least two choices are required for personality questions.');
+    }
+}
+</script>
+{% endblock %}

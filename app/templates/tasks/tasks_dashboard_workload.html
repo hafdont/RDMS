@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}Team Workload{% endblock %}
+{% block content %}
+<div class="container py-5">
+    
+    <ul class="nav nav-tabs mb-4">    
+        {% if current_user.role in ['DIRECTOR', 'ADMIN'] %}
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'actions' %}active{% endif %}" href="{{ url_for('task.task_dashboard') }}">Action Required</a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'workload' %}active{% endif %}" href="{{ url_for('task.task_dashboard_workload') }}">Team Workload</a>
+        </li>
+       {% if current_user.role in ['DIRECTOR', 'ADMIN'] %}
+        <li class="nav-item">
+            <a class="nav-link {% if current_page == 'analytics' %}active{% endif %}" href="{{ url_for('task.task_dashboard_analytics') }}">Task Analytics</a>
+        </li>
+        {% endif %}
+    </ul>
+
+    <h2 class="mt-5 mb-3">Team Workload Overview</h2>
+    <div class="mb-4" id="workload-container"> {% for department, workloads in team_workload.items() %}
+        <h4 class="mt-4 text-secondary">{{ department }}</h4>
+        <hr class="mt-0">
+        <div class="row g-4">
+            {% for workload in workloads %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ workload.user.full_name }}</h5>
+                        <span class="badge bg-secondary">{{ workload.user.role.value }}</span>
+                    </div>
+                        <div class="card-body" id="stats-body-{{ workload.user.id }}">
+                            <div class="row text-center">
+                              <div class="row">
+                                <div class="col"><p class="mb-0 fs-4 fw-bold">{{ workload.stats.in_progress }}</p><small class="text-muted">In Progress</small></div>
+                                <div class="col"><p class="mb-0 fs-4 fw-bold">{{ workload.stats.paused }}</p><small class="text-muted">Paused</small></div>
+                              </div>
+                              <div class="row text-center">
+                                <div class="col"><p class="mb-0 fs-4 fw-bold text-info">{{ workload.stats.under_review }}</p><small class="text-muted">In Review</small></div>
+                                <div class="col"><p class="mb-0 fs-4 fw-bold text-success">{{ workload.stats.completed }}</p><small class="text-muted">Completed</small></div>
+                              </div>
+                              <div class="row text-center">
+                                <div class="col"><p class="mb-0 fs-4 fw-bold text-danger">{{ workload.stats.redo }}</p><small class="text-muted">For Redo</small></div>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-primary user-filter-btn" data-period="today" data-user-id="{{ workload.user.id }}">D</button>
+                                    <button class="btn btn-outline-secondary user-filter-btn" data-period="week" data-user-id="{{ workload.user.id }}">W</button>
+                                    <button class="btn btn-outline-secondary user-filter-btn" data-period="month" data-user-id="{{ workload.user.id }}">M</button>
+                                    <button class="btn btn-outline-secondary user-filter-btn" data-period="6months" data-user-id="{{ workload.user.id }}">6M</button>
+                                </div>
+                                <a href="{{ url_for('task.get_assigned_tasks', user_id=workload.user.id) }}" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-calendar-event"></i> Select a specific date to see the tasks</span>
+                                <input type="date" class="form-control date-filter-input" 
+                                    data-user-id="{{ workload.user.id }}" 
+                                    title="Select a specific date">
+                            </div>
+                        </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">No team members found.</p>
+    {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const workloadContainer = document.getElementById('workload-container');
+
+    // 1. Handle Button Clicks (Today, Week, Month)
+    workloadContainer.addEventListener('click', function(event) {
+        const button = event.target.closest('.user-filter-btn');
+        if (!button) return;
+
+        const userId = button.dataset.userId;
+        const period = button.dataset.period;
+        
+        // Reset the date picker in the same card if a button is clicked
+        const card = button.closest('.card');
+        const dateInput = card.querySelector('.date-filter-input');
+        if (dateInput) dateInput.value = '';
+
+        // Update UI: Toggle active classes
+        card.querySelectorAll('.user-filter-btn').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-secondary');
+        });
+        button.classList.add('btn-primary');
+        button.classList.remove('btn-outline-secondary');
+
+        fetchUserWorkload(userId, period, null);
+    });
+
+    // 2. Handle Specific Date Selection
+    workloadContainer.addEventListener('change', function(event) {
+        if (event.target.classList.contains('date-filter-input')) {
+            const userId = event.target.dataset.userId;
+            const selectedDate = event.target.value;
+
+            if (selectedDate) {
+                // Remove active styling from buttons because we are now in "Specific Date" mode
+                const card = event.target.closest('.card');
+                card.querySelectorAll('.user-filter-btn').forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-secondary');
+                });
+
+                fetchUserWorkload(userId, null, selectedDate);
+            }
+        }
+    });
+
+    // 3. Reusable Fetch Function
+    async function fetchUserWorkload(userId, period, specificDate) {
+        const statsBody = document.getElementById(`stats-body-${userId}`);
+        if (!statsBody) return;
+
+        // Loading state
+        statsBody.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center" style="min-height: 100px;">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>`;
+        
+        try {
+            // Construct URL based on whether we have a period or a specific date
+            let url = `/dashboard/user-workload/${userId}?`;
+            url += specificDate ? `date=${specificDate}` : `period=${period}`;
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.success) {
+                renderUserStats(statsBody, result.stats);
+            } else {
+                statsBody.innerHTML = '<p class="text-danger small text-center">Error loading stats.</p>';
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            statsBody.innerHTML = '<p class="text-danger small text-center">Server error.</p>';
+        }
+    }
+
+    function renderUserStats(container, stats) {
+        container.innerHTML = `
+            <div class="row text-center">
+                <div class="row">
+                  <div class="col"><p class="mb-0 fs-4 fw-bold">${stats.in_progress}</p><small class="text-muted">In Progress</small></div>
+                  <div class="col"><p class="mb-0 fs-4 fw-bold">${stats.paused}</p><small class="text-muted">Paused</small></div>
+                </div>
+                <div class="row text-center">
+                  <div class="col"><p class="mb-0 fs-4 fw-bold text-info">${stats.under_review}</p><small class="text-muted">In Review</small></div>
+                  <div class="col"><p class="mb-0 fs-4 fw-bold text-success">${stats.completed}</p><small class="text-muted">Completed</small></div>
+                </div>
+                <div class="row text-center">
+                  <div class="col"><p class="mb-0 fs-4 fw-bold text-danger">${stats.redo}</p><small class="text-muted">For Redo</small></div>
+                </div>
+            </div>`;
+    }
+});
+</script>
+
+</script>
+{% endblock %}

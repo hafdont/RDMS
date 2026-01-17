@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to 3A CPA LLP{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+
+    <form method="POST" action="{{ url_for('job.create_job') }}">
+        <div class="mb-3">
+            <label for="client">Engagement Name (Client)</label>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" class="form-control" id="client" name="client_name" placeholder="Start typing client name to search..." autocomplete="off" required>
+            <input type="hidden" id="client_id" name="client_id">
+            <div id="client-suggestions" class="list-group" style="position:absolute; z-index:1000; width: 95%;"></div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="assigned_to">Assign To</label>
+            <select name="assigned_to" id="assigned_to" class="form-control" required>
+                <option value="">-- Select User --</option>
+                {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="service_id">Service</label>
+            
+            <select class="form-select" id="service_id" name="service_id" required>
+                <option value="">-- Select a Service --</option>
+                {% for service in services %}
+                    <option value="{{ service.id }}">{{ service.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="name">Description (Optional)</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="e.g. VAT Filing for the year 2024" required>
+        </div>
+
+        <div id="taskTemplatesSection" class="mb-4">
+
+
+
+        <div id="taskTemplatesSection" class="mb-4">
+            <label>Task Templates</label>
+            <div id="template-options"></div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Create Engagement</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const templates = {{ templates | tojson }};
+    const users = {{ users | tojson }};
+
+    const serviceSelect = document.getElementById("service_id");
+    const container = document.getElementById("template-options");
+
+    function createUserOptions(selectedUserId = null) {
+      let optionsHtml = '<option value="">-- Use Engagement Assignee --</option>';
+      users.forEach(user => {
+        const isSelected = (user.id === parseInt(selectedUserId)) ? 'selected' : '';
+        optionsHtml += `<option value="${user.id}" ${isSelected}>${user.first_name} ${user.last_name}</option>`;
+      });
+      return optionsHtml;
+    }
+
+    function filterTemplatesByService(serviceId) {
+      return templates.filter(tpl => tpl.service_id === parseInt(serviceId));
+    }
+
+    function updateTaskTemplates() {
+      const selectedServiceId = serviceSelect.value;
+      const defaultEngagementAssigneeId = document.getElementById("assigned_to") ? document.getElementById("assigned_to").value : null;
+
+      if (!selectedServiceId) {
+        container.innerHTML = `<p class="text-muted">Please select a service to see available task templates.</p>`;
+        return;
+      }
+
+      const filtered = filterTemplatesByService(selectedServiceId);
+      container.innerHTML = "";
+
+      if (filtered.length > 0) {
+        const taskCardsContainer = document.createElement("div");
+        taskCardsContainer.classList.add("row", "g-3");
+
+        filtered.forEach(tpl => {
+          const colDiv = document.createElement("div");
+          colDiv.classList.add("col-12", "col-md-6", "col-lg-4");
+
+          const taskCard = document.createElement("div");
+          taskCard.classList.add("card");
+
+          taskCard.innerHTML = `
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="task_template_ids" value="${tpl.id}" id="tpl-${tpl.id}">
+                    <label class="form-check-label h5 mb-0" for="tpl-${tpl.id}">
+                        ${tpl.title}
+                    </label>
+                </div>
+                
+                <button type="button" class="btn btn-sm btn-link text-secondary" data-bs-toggle="collapse" data-bs-target="#card-body-${tpl.id}" aria-expanded="false">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+
+            <div class="collapse" id="card-body-${tpl.id}">
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-3">
+                        <label for="deadline_${tpl.id}" class="form-label">Deadline</label>
+                        <input type="datetime-local" class="form-control" name="deadline_${tpl.id}" id="deadline_${tpl.id}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="description_${tpl.id}" class="form-label">Description</label>
+                        <textarea class="form-control form-control-sm" id="description_${tpl.id}" name="description_${tpl.id}" placeholder="Task description...">${tpl.description}</textarea>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="estimated_value_${tpl.id}" class="form-label">Estimated Time</label>
+                            <input type="number" class="form-control" name="estimated_value_${tpl.id}" id="estimated_value_${tpl.id}" value="0" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="estimated_unit_${tpl.id}" class="form-label">Unit</label>
+                            <select class="form-select" name="estimated_unit_${tpl.id}" id="estimated_unit_${tpl.id}">
+                                <option value="minutes">Minutes</option>
+                                <option value="hours">Hours</option>
+                                <option value="days">Days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="priority_${tpl.id}" class="form-label">Priority</label>
+                        <select class="form-select" name="priority_${tpl.id}" id="priority_${tpl.id}">
+                            <option value="Medium" selected>Medium</option>
+                            <option value="Low">Low</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="recurrence_${tpl.id}">Recurrence</label>
+                        <select class="form-control" id="recurrence_${tpl.id}" name="recurrence_${tpl.id}" required>
+                            <option value="NONE" selected>Not Recurring</option>
+                            <option value="WEEKLY">Weekly</option>
+                            <option value="MONTHLY">Monthly</option>
+                            <option value="YEARLY">Yearly</option>
+                        </select>
+                    </div>
+                    <div class="mt-auto">
+                        <label for="assigned_to_task_${tpl.id}" class="form-label">Assign This Task To (Optional)</label>
+                        <select class="form-select" name="assigned_to_task_${tpl.id}" id="assigned_to_task_${tpl.id}">
+                            ${createUserOptions(defaultEngagementAssigneeId)}
+                        </select>
+                    </div>
+                    </div>
+            </div> `;
+          colDiv.appendChild(taskCard);
+          taskCardsContainer.appendChild(colDiv);
+        });
+        container.appendChild(taskCardsContainer);
+      } else {
+        container.innerHTML = `<p class="text-muted">No task templates available for the selected service.</p>`;
+      }
+    }
+
+    serviceSelect.addEventListener("change", updateTaskTemplates);
+
+    const mainAssignedToSelect = document.getElementById("assigned_to");
+    if (mainAssignedToSelect) {
+      mainAssignedToSelect.addEventListener("change", updateTaskTemplates);
+    }
+
+    updateTaskTemplates();
+
+    // This listener handles the checkbox click
+    container.addEventListener('change', function(event) {
+            // Check if the item that changed was a task template checkbox
+            if (event.target.type === 'checkbox' && event.target.name === 'task_template_ids') {
+                const checkbox = event.target;
+                const targetId = `card-body-${checkbox.value}`;
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    // Get the Bootstrap Collapse instance
+                    const collapseInstance = new bootstrap.Collapse(targetElement, { toggle: false });
+                    
+                    // If checkbox is checked, show. If unchecked, hide.
+                    if (checkbox.checked) {
+                        collapseInstance.show();
+                    } else {
+                        collapseInstance.hide();
+                    }
+                }
+            }
+        });
+
+        // This listener flips the chevron icon when the card is shown
+        container.addEventListener('show.bs.collapse', function (event) {
+            // Find the button that controls this collapsing item
+            const toggleButton = document.querySelector(`[data-bs-target="#${event.target.id}"]`);
+            if (toggleButton) {
+                // Change icon to 'chevron-up'
+                toggleButton.innerHTML = '<i class="fas fa-chevron-up"></i>';
+            }
+        });
+
+        // This listener flips the chevron icon when the card is hidden
+        container.addEventListener('hide.bs.collapse', function (event) {
+            // Find the button that controls this collapsing item
+            const toggleButton = document.querySelector(`[data-bs-target="#${event.target.id}"]`);
+            if (toggleButton) {
+                // Change icon to 'chevron-down'
+                toggleButton.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            }
+        });
+        // --- END NEW/REPLACED JAVASCRIPT ---
+    });
+</script>
+{% endblock %}

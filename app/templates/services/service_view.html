@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %} {{ service.name }} - 3A CPA LLP Services {% endblock %}
+
+{% block content %}
+<div class="container py-4"> {# Added py-4 for vertical padding #}
+    {# Back button with improved spacing #}
+    <a href="{{ url_for('services.list_services') }}" class="btn btn-outline-secondary btn-sm mb-4">
+        <i class="bi bi-arrow-left"></i> Back to All Services
+    </a>
+
+    <div class="card shadow-lg border-0 rounded-3 mb-5"> {# Stronger shadow, no border, more rounded, added mb-5 #}
+        <div class="card-body p-5"> {# Increased padding inside card body #}
+            {# Service Name - Larger, bolder, with bottom margin #}
+            <h1 class="card-title text-primary mb-3">{{ service.name }}</h1>
+            {# Service Description - Slightly larger text, muted color #}
+            <p class="lead text-secondary mb-4">
+                {{ service.description or "No detailed description available for this service yet." }}
+            </p>
+
+            <!-- Edit Button triggers collapse -->
+                <button class="btn btn-sm btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#editServiceForm" aria-expanded="false" aria-controls="editServiceForm">
+                <i class="bi bi-pencil-square"></i> Edit Service
+                </button>
+
+                <form action="{{ url_for('services.delete_service', service_id=service.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger mb-3"
+                            onclick="return confirm('Are you sure you want to delete this service? This action cannot be undone.');">
+                        <i class="fas fa-trash"></i> Delete Service
+                    </button>
+                </form>
+
+                <!-- Collapsible Edit Form -->
+                <div class="collapse mb-4" id="editServiceForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <form method="POST" action="{{ url_for('services.edit_service', service_id=service.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                    <label for="name" class="form-label">Service Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ service.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4">{{ service.description }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </form>
+                </div>
+
+
+            <hr class="my-5"> {# Stronger horizontal rule with more vertical margin #}
+
+            {# Task Templates Section #}
+            <h4 class="text-info mb-3">
+                <i class="bi bi-list-task me-2"></i> Task Templates
+            </h4>
+            <p class="text-muted fst-italic">
+                This section lists predefined tasks that streamline the workflow for this service.
+            </p>
+
+            {# Display Task Templates #}
+            <ul class="list-group list-group-flush mb-5">
+            {% for template in service.task_templates %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1 fw-semibold">{{ template.title }}</h6>
+                    <small class="text-muted">
+                    {{ template.description or "No description provided." }}
+                    </small>
+                    {% if template.default_deadline_days %}
+                    <div class="text-muted small mt-1">Default Deadline: {{ template.default_deadline_days }} days</div>
+                    {% endif %}
+                </div>
+
+                <div class="btn-group">
+
+                    {% set js_template = (templates_json | selectattr("id", "equalto", template.id) | list).0 %}
+
+                    <button class="btn btn-sm btn-outline-primary"
+                            onclick='openEditModal({{ js_template | tojson | safe }})'>
+                    <i class="bi bi-pencil-square"></i> Edit
+                    </button>
+
+                    <form method="POST"
+                        action="{{ url_for('template.delete_task_template', template_id=template.id) }}"
+                        class="d-inline">
+                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Are you sure you want to delete this template?')">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                    </form>
+                </div>
+                </li>
+            {% endfor %}
+            </ul>
+            <hr class="my-5">
+
+            {# Button to toggle Add New Task Template Form #}
+            <!-- Button to open modal -->
+            <div class="text-center mb-4">
+            <button class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target="#taskTemplateModal">
+                <i class="bi bi-plus-circle me-2"></i> Add New Task Template
+            </button>
+            </div>
+
+
+            {# Add Task Template Form Section - Initially hidden with Bootstrap Collapse #}
+            <div class="collapse" id="addTaskTemplateForm">
+                <div class="card card-body bg-light border-0 rounded-3 shadow-sm p-4 mt-4" data-aos="fade-zoom-in" data-aos-offset="50" data-aos-easing="ease-in-sine" data-aos-duration="600"> {# AOS for form card #}
+                    <h5 class="text-success mb-4">
+                        <i class="bi bi-file-earmark-plus me-2"></i> Define New Template top one 
+                    </h5>
+                    <form method="POST" action="{{ url_for('template.create_task_template', service_id=service.id) }}">
+                        <div class="mb-3">
+                            <label for="title" class="form-label fw-bold">Task Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="title" name="title" required
+                                   placeholder="e.g., Gather Client Documents">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-bold">Description (optional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="4"
+                                      placeholder="Provide a detailed description for this task..."></textarea>
+                        </div>
+                        <div class="mb-4"> {# mb-4 for more space below #}
+                            <label for="default_deadline_days" class="form-label fw-bold">Default Deadline (in days)</label>
+                            <input type="number" class="form-control" id="default_deadline_days" name="default_deadline_days"
+                                   placeholder="e.g., 7 or 30">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-save me-2"></i> Save New Template
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Task Template Modal -->
+            <div class="modal fade" id="taskTemplateModal" tabindex="-1" aria-labelledby="taskTemplateModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                <form id="taskTemplateForm" method="POST" action="{{ url_for('template.create_task_template', service_id=service.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="taskTemplateModalLabel">New Task Template boom one</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                    <input type="hidden" name="template_id" id="template_id">
+                        <div class="mb-3">
+                            <label for="title" class="form-label fw-bold">Task Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="title" name="title" required
+                                   placeholder="e.g., Gather Client Documents">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-bold">Description (optional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="4"
+                                      placeholder="Provide a detailed description for this task..."></textarea>
+                        </div>
+                        <div class="mb-4"> {# mb-4 for more space below #}
+                            <label for="default_deadline_days" class="form-label fw-bold">Default Deadline (in days)</label>
+                            <input type="number" class="form-control" id="default_deadline_days" name="default_deadline_days"
+                                   placeholder="e.g., 7 or 30">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-save me-2"></i> Save New Template
+                        </button>
+                    </div>
+                </form>
+                </div>
+            </div>
+            </div>
+
+            <!-- Edit Task Template Modal -->
+            <div class="modal fade" id="editTemplateModal" tabindex="-1" aria-labelledby="editTemplateModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form id="edit-template-form" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editTemplateModalLabel">Edit Task Template</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-template-id" name="template_id">
+                        <div class="mb-3">
+                        <label for="edit-title" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="edit-title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                        <label for="edit-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit-description" name="description" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3">
+                        <label for="edit-default-deadline-days" class="form-label">Default Deadline (days)</label>
+                        <input type="number" class="form-control" id="edit-default-deadline-days" name="default_deadline_days">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                    </form>
+                </div>
+                </div>
+            </div>
+  
+
+
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditModal(template) {
+  // Prefill modal inputs
+  document.getElementById('edit-title').value = template.title;
+  document.getElementById('edit-description').value = template.description || '';
+  document.getElementById('edit-default-deadline-days').value = template.default_deadline_days || '';
+
+  // Set the form action
+  const form = document.getElementById('edit-template-form');
+  form.action = `/templates/${template.id}/edit`; // Update this URL if different
+
+  // Show the modal (Bootstrap 5)
+  const modal = new bootstrap.Modal(document.getElementById('editTemplateModal'));
+  modal.show();
+}
+
+</script>
+
+
+
+{% endblock %}

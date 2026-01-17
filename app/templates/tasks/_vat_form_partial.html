@@ -1,0 +1,667 @@
+<div  id="vatReportContainer" class="financial-report-container col-lg-12">
+    <div class="report-header">
+        <div class="d-flex align-items-center">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" width="60" height="40" class="me-3">
+            <h6>Monthly Approval Form</h6>
+            <h1>Form ID {{ vat_form.id }}</h1>
+        </div>
+        <div class="btn-toolbar">
+            <div class="btn-group me-2">
+                <button id="editVatFormBtn" class="btn btn-sm btn-light">
+                    <i class="fas fa-edit me-1"></i> Edit
+                </button>
+            </div>
+            <div class="btn-group edit-mode-element">
+                <button id="manualSaveBtn" type="button" class="btn btn-sm btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Now
+                </button>
+
+                <button id="cancelEditBtn" type="button" class="btn btn-sm btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-header-details">
+        <span><strong>CLIENT:</strong> {{ job.client.name | upper }}</span>
+        <span><strong>PERIOD:</strong> {{ vat_form.month | upper }}</span>
+        
+        {% set relevant_task = namespace(value=none) %}
+        {% for task in job.tasks %}
+            {% if task.task_template and task.task_template.title == 'VAT Returns' and task.deadline %}
+                {% if task.deadline.strftime('%b-%Y') == vat_form.month %}
+                    {% set relevant_task.value = task %}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        
+        <span><strong>ASSIGNED TO:</strong> 
+            {% if relevant_task.value %}
+                {{ relevant_task.value.assignee.full_name | upper }}
+            {% else %}
+                N/A
+            {% endif %}
+        </span>
+    </div>
+
+<div class="report-section">
+    <h3 class="report-section-title">A. VAT</h3>
+    
+    <div class="d-flex justify-content-between align-items-center">
+        <h5>PREV VAT SUMMARY</h5>
+    </div>
+
+    <hr>
+    <div class="card my-4">
+        <div class="card-header">
+            <h5><i class="fas fa-file-upload me-2"></i>Bulk Import VAT Summary</h5>
+        </div>
+        <div class="card-body">
+            <p class="card-text">
+                To import historical VAT data, first download the template, fill it in with your data, and then upload the completed file.
+            </p>
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('job.download_vat_template', job_id=job.id) }}" class="btn btn-success me-3">
+                    <i class="fas fa-file-download me-2"></i>Download Template
+                </a>
+                <form action="{{ url_for('job.import_vat_summary', job_id=job.id) }}" method="post" enctype="multipart/form-data">
+                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="input-group">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">                        
+                        <input type="file" class="form-control" name="vat_summary_file" required accept=".csv">
+                        <button class="btn btn-primary" type="submit">Upload File</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div class="table-responsive">
+
+        <div class="">
+
+        <button id="toggleVatViewBtn" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="fas fa-compress-alt me-1"></i> Show Simple View
+        </button>
+
+        </div>
+
+        <table id="prevVatSummaryTable" class="table report-table table-bordered col-lg-10">
+            <thead>
+                <tr>
+                    <th>MONTH</th>
+                    <th class="detailed-col">Sales Zero Rated</th>
+                    <th class="detailed-col">Sales Exempt</th>
+                    <th class="detailed-col">Sales @16%</th>
+                    <th class="detailed-col">Sales @8%</th>
+                    <th>Total Sales</th>
+                    <th class="detailed-col">Output VAT 16%</th>
+                    <th class="detailed-col">Output VAT 8%</th>
+                    <th class="detailed-col">Total Output VAT</th>
+                    <th class="detailed-col">Purchases Zero Rated</th>
+                    <th class="detailed-col">Purchases Exempt</th>
+                    <th class="detailed-col">Purchases @16%</th>
+                    <th class="detailed-col">Purchases @8%</th>
+                    <th>Total Purchases</th>
+                    <th class="detailed-col">Input VAT 16%</th>
+                    <th class="detailed-col">Input VAT 8%</th>
+                    <th class="detailed-col">Total Input VAT</th>
+                    <th class="detailed-col">Withheld VAT</th>
+                    <th class="detailed-col">Balance B/F</th>
+                    <th>Net VAT</th>
+                    <th class="detailed-col">Paid</th>
+                    <th class="detailed-col">Balance C/F</th>
+                </tr>
+            </thead>
+            
+            <tbody id="vatSummaryTableBody">
+            {% for item in vat_summary_data %}
+                <tr data-month="{{ item.month }}">
+                    <td>{{ item.month }}</td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.sales_zero_rated or 0) }}</span>
+                        <input type="number" step="0.01" name="sales_zero_rated_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.sales_zero_rated or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.sales_exempt or 0) }}</span>
+                        <input type="number" step="0.01" name="sales_exempt_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.sales_exempt or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.sales_vatable_16 or 0) }}</span>
+                        <input type="number" step="0.01" name="sales_vatable_16_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.sales_vatable_16 or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.sales_vatable_8 or 0) }}</span>
+                        <input type="number" step="0.01" name="sales_vatable_8_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.sales_vatable_8 or '' }}">
+                    </td>
+                    <td>
+
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.total_sales or 0) }}</span>
+                        
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.output_vat_16 or 0) }}</span>
+                        <input type="number" step="0.01" name="output_vat_16_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.output_vat_16 or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.output_vat_8 or 0) }}</span>
+                        <input type="number" step="0.01" name="output_vat_8_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.output_vat_8 or '' }}">
+                    </td>
+                    <td class="detailed-col">{{ "{:,.2f}".format(item.total_output_vat or 0) }}</td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.purchases_zero_rated or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_zero_rated_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.purchases_zero_rated or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.purchases_exempt or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_exempt_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.purchases_exempt or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.purchases_vatable_16 or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_vatable_16_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.purchases_vatable_16 or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.purchases_vatable_8 or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_vatable_8_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.purchases_vatable_8 or '' }}">
+                    </td>
+                    <td>{{ "{:,.2f}".format(item.total_purchases or 0) }}</td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.input_vat_16 or 0) }}</span>
+                        <input type="number" step="0.01" name="input_vat_16_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.input_vat_16 or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.input_vat_8 or 0) }}</span>
+                        <input type="number" step="0.01" name="input_vat_8_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.input_vat_8 or '' }}">
+                    </td>
+                    <td class="detailed-col">{{ "{:,.2f}".format(item.total_input_vat or 0) }}</td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.withheld_vat or 0) }}</span>
+                        <input type="number" step="0.01" name="withheld_vat_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.withheld_vat or '' }}">
+                    </td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.balance_bf or 0) }}</span>
+                        <input type="number" step="0.01" name="balance_bf_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.balance_bf or '' }}">
+                    </td>
+                    <td>{{ "{:,.2f}".format(item.net_vat or 0) }}</td>
+                    <td class="detailed-col">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(item.paid or 0) }}</span>
+                        <input type="number" step="0.01" name="paid_{{ item.month[:3].upper() }}" class="form-control form-control-sm edit-mode-element" value="{{ item.paid or '' }}">
+                    </td>
+                    <td class="detailed-col">{{ "{:,.2f}".format(item.balance_cf or 0) }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="22" class="text-center text-muted">
+                        No historical data yet.
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+                <tfoot>
+                    <tr class="total-row" style="font-weight: bold;">
+                        <td>YTD TOTAL</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.sales_zero_rated) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.sales_exempt) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.sales_vatable_16) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.sales_vatable_8) }}</td>
+                        <td>{{ "{:,.2f}".format(vat_totals.total_sales) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.output_vat_16) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.output_vat_8) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.total_output_vat) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.purchases_zero_rated) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.purchases_exempt) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.purchases_vatable_16) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.purchases_vatable_8) }}</td>
+                        <td>{{ "{:,.2f}".format(vat_totals.total_purchases) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.input_vat_16) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.input_vat_8) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.total_input_vat) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.withheld_vat) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.balance_bf) }}</td>
+                        <td>{{ "{:,.2f}".format(vat_totals.net_vat) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.paid) }}</td>
+                        <td class="detailed-col">{{ "{:,.2f}".format(vat_totals.balance_cf) }}</td>
+                    </tr>
+                </tfoot>
+        </table>
+
+    </div>
+
+
+        
+        <h5>CURRENT MONTH</h5>
+        <table class="table report-table table-bordered">
+            <thead>
+                <tr>
+                    <th rowspan="2">PARTICULARS</th>
+                    <th colspan="2">VATABLE</th>
+                    <th rowspan="2">VAT</th>
+                    <th rowspan="2">ZERO RATED</th>
+                    <th rowspan="2">EXEMPT</th>
+                    <th rowspan="2">TOTAL</th>
+                </tr>
+                <tr>
+                    <th>16%</th>
+                    <th>8%</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- TOTAL SALES -->
+                <tr class="table-group-divider">
+                    <td style="font-weight: bold;">TOTAL SALES</td>
+                    <td>
+                        <span class="view-mode-element"> </span>
+                        <input type="number" readonly class="form-control form-control-sm edit-mode-element" name="total_sales_vatable_16_display">
+                    </td>
+                    <td>
+                        <span class="view-mode-element"> </span>
+                        <input type="number" readonly class="form-control form-control-sm edit-mode-element" name="total_sales_vatable_8_display">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.vat_on_sales or 0) }}</span>
+                        <input type="number" readonly class="form-control form-control-sm edit-mode-element" name="total_sales_vat_display">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.total_sales_zero_rated or 0) }}</span>
+                        <input type="number" readonly class="form-control form-control-sm edit-mode-element" name="total_sales_zero_rated_display">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.total_sales_exempt or 0) }}</span>
+                        <input type="number" readonly class="form-control form-control-sm edit-mode-element" name="total_sales_exempt_display">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.total_sales or 0) }}</span>
+                        <input type="number" readonly class="form-control form-control-sm edit-mode-element" name="total_sales_total_display">
+                    </td>
+                </tr>
+
+                <!-- REG CUSTOMERS -->
+                <tr>
+                    <td style="padding-left: 2em;">REG CUSTOMERS</td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.reg_customers_vatable_16 or 0) }}</span>
+                        <input type="number" step="0.01" name="reg_customers_vatable_16" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.reg_customers_vatable_16 or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.reg_customers_vatable_8 or 0) }}</span>
+                        <input type="number" step="0.01" name="reg_customers_vatable_8" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.reg_customers_vatable_8 or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.reg_customers_vat or 0) }}</span>
+                        <input type="number" readonly name="reg_customers_vat" class="form-control form-control-sm edit-mode-element">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.reg_customers_zero_rated or 0) }}</span>
+                        <input type="number" step="0.01" name="reg_customers_zero_rated" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.reg_customers_zero_rated or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.reg_customers_exempt or 0) }}</span>
+                        <input type="number" step="0.01" name="reg_customers_exempt" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.reg_customers_exempt or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.reg_customers_total or 0) }}</span>
+                        <input type="number" readonly name="reg_customers_total" class="form-control form-control-sm edit-mode-element">
+                    </td>
+                </tr>
+
+                <!-- NON REG CUSTOMERS -->
+                <tr>
+                    <td style="padding-left: 2em;">NON REG CUSTOMERS</td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.non_reg_customers_vatable_16 or 0) }}</span>
+                        <input type="number" step="0.01" name="non_reg_customers_vatable_16" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.non_reg_customers_vatable_16 or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.non_reg_customers_vatable_8 or 0) }}</span>
+                        <input type="number" step="0.01" name="non_reg_customers_vatable_8" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.non_reg_customers_vatable_8 or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.non_reg_customers_vat or 0) }}</span>
+                        <input type="number" readonly name="non_reg_customers_vat" class="form-control form-control-sm edit-mode-element">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.non_reg_customers_zero_rated or 0) }}</span>
+                        <input type="number" step="0.01" name="non_reg_customers_zero_rated" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.non_reg_customers_zero_rated or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.non_reg_customers_exempt or 0) }}</span>
+                        <input type="number" step="0.01" name="non_reg_customers_exempt" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.non_reg_customers_exempt or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.non_reg_customers_total or 0) }}</span>
+                        <input type="number" readonly name="non_reg_customers_total" class="form-control form-control-sm edit-mode-element">
+                    </td>
+                </tr>
+
+                <!-- PURCHASES -->
+                <tr class="table-group-divider">
+                    <td style="font-weight: bold;">PURCHASES</td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.purchases_vatable_16 or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_vatable_16" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.purchases_vatable_16 or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.purchases_vatable_8 or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_vatable_8" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.purchases_vatable_8 or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.purchases_vat or 0) }}</span>
+                        <input type="number" readonly name="purchases_vat" class="form-control form-control-sm edit-mode-element">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.purchases_zero_rated or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_zero_rated" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.purchases_zero_rated or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.purchases_exempt or 0) }}</span>
+                        <input type="number" step="0.01" name="purchases_exempt" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.purchases_exempt or '' }}">
+                    </td>
+                    <td>
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.purchases_total or 0) }}</span>
+                        <input type="number" readonly name="purchases_total" class="form-control form-control-sm edit-mode-element">
+                    </td>
+                </tr>
+
+                <!-- VAT WH CREDIT -->
+                <tr>
+                    <td style="font-weight: bold;">VAT WH CREDIT</td>
+                    <td colspan="3">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.vat_wh_credit or 0) }}</span>
+                        <input type="number" step="0.01" name="vat_wh_credit" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.vat_wh_credit or '' }}">
+                    </td>
+                    <td colspan="3"></td>
+                </tr>
+
+                <!-- CREDIT BF -->
+                <tr>
+                    <td style="font-weight: bold;">CREDIT BF</td>
+                    <td colspan="3">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.credit_bf or 0) }}</span>
+                        <input type="number" step="0.01" name="credit_bf" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.credit_bf or '' }}">
+                    </td>
+                    <td colspan="3"></td>
+                </tr>
+
+                <!-- VAT PAYABLE -->
+                <tr class="total-row table-group-divider">
+                    <td style="font-weight: bold;">VAT PAYABLE</td>
+                    <td colspan="3">
+                        <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.vat_payable or 0) }}</span>
+                        <input type="number" readonly name="vat_payable_display" class="form-control form-control-sm edit-mode-element">
+                    </td>
+                    <td colspan="3">
+                        <input type="number" step="0.01" name="vat_payable_override" placeholder="Manual Override (Optional)" class="form-control form-control-sm edit-mode-element" value="{{ vat_form.vat_payable_override or '' }}">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h5>BANKING CREDIT SUMMARY</h5>
+                {% set months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'] %}
+                <table class="table report-table table-bordered">
+                 <thead><tr><th>MONTH</th><th>TOTAL CREDITS</th><th>NET CREDITS</th></tr></thead>
+                     <tbody>
+                                    {% for month_name in months %}
+                                        {% set item = banking_data.get(month_name) %}
+                                        <tr>
+                                            <td>{{ month_name }}</td>
+                                            <td>
+                                                <span class="view-mode-element">{{ "{:,.2f}".format(item.total_credits or 0) }}</span>
+                                                <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="bc_total_credits_{{ month_name }}" value="{{ item.total_credits or '' }}">
+                                            </td>
+                                            <td>
+                                                <span class="view-mode-element">{{ "{:,.2f}".format(item.net_credits or 0) }}</span>
+                                                <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="bc_net_credits_{{ month_name }}" value="{{ item.net_credits or '' }}">
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="total-row" style="font-weight: bold;">
+                                        <td>TOTAL</td>
+                                        <td>{{ "{:,.2f}".format(total_banking_credits) }}</td>
+                                        <td>{{ "{:,.2f}".format(total_banking_net) }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>PREV GROSS SALARY/MONTH</h5>
+                            <table class="table report-table table-bordered">
+                                <thead><tr><th>MONTH</th><th>GROSS SALARY</th></tr></thead>
+                                <tbody>
+                                    {% for month_name in months %}
+                                        {% set item = salary_data.get(month_name) %}
+                                        <tr>
+                                            <td>{{ month_name }}</td>
+                                            <td>
+                                                <span class="view-mode-element">{{ "{:,.2f}".format(item.gross_salary or 0) }}</span>
+                                                <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="gs_gross_salary_{{ month_name }}" value="{{ item.gross_salary or '' }}">
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="report-section">
+                    <h3 class="report-section-title">B. PAYE</h3>
+                    <table class="table report-table table-bordered">
+                        <thead>
+                            <tr><th></th><th>PAYE</th><th>SHIF</th><th>NSSF</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>No. of Employees</td>
+                                <td>
+                                    <span class="view-mode-element">{{ vat_form.paye_employees or 0 }}</span>
+                                    <input type="number" class="form-control form-control-sm edit-mode-element" name="paye_employees" value="{{ vat_form.paye_employees or '' }}">
+                                </td>
+                                <td>
+                                    <span class="view-mode-element">{{ vat_form.shif_employees or 0 }}</span>
+                                    <input type="number" class="form-control form-control-sm edit-mode-element" name="shif_employees" value="{{ vat_form.shif_employees or '' }}">
+
+                                </td>
+                                <td>
+                                    <span class="view-mode-element">{{ vat_form.nssf_employees or 0 }}</span>
+                                    <input type="number" class="form-control form-control-sm edit-mode-element" name="nssf_employees" value="{{ vat_form.nssf_employees or '' }}">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Amount deducted</td>
+                                <td>
+                                    <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.paye_amount or 0) }}</span>
+                                    <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="paye_amount" value="{{ vat_form.paye_amount or '' }}">
+                                </td>
+                                <td>
+                                    <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.shif or 0) }}</span>
+                                    <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="shif" value="{{ vat_form.shif or '' }}">
+                                </td>
+                                <td>
+                                    <span class="view-mode-element">{{ "{:,.2f}".format(vat_form.nssf or 0) }}</span>
+                                    <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="nssf" value="{{ vat_form.nssf or '' }}">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-6">
+                        <div class="report-section">
+                            <h3 class="report-section-title">C. INSTALLMENT TAX</h3>
+                            <table class="table report-table table-bordered">
+                                <thead><tr><th>INSTALLMENT</th><th>AMOUNT</th><th>STATUS</th></tr></thead>
+                                <tbody>
+                                    <tr>
+                                        <td>First Installment</td>
+                                        <td>
+                                            <span class="view-mode-element">{{ installment_summary.installment_tax_1 or 'N/A' }}</span>
+                                            <input type="text" class="form-control form-control-sm edit-mode-element" name="installment_tax_1" value="{{ installment_summary.installment_tax_1 or '' }}">
+                                        </td>
+                                        <td>
+                                            <span class="view-mode-element">{% if installment_summary.installment_paid_1 %}Paid{% else %}Not Paid{% endif %}</span>
+                                            <select name="installment_paid_1" class="form-select form-select-sm edit-mode-element">
+                                                <option value="true" {% if installment_summary.installment_paid_1 %}selected{% endif %}>Paid</option>
+                                                <option value="false" {% if not installment_summary.installment_paid_1 %}selected{% endif %}>Not Paid</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Second Installment</td>
+                                        <td>
+                                            <span class="view-mode-element"> {{ installment_summary.installment_tax_2 or 'N/A' }}</span>
+                                            <input type="text" class="form-control form-control-sm edit-mode-element" name="installment_tax_2" value="{{ installment_summary.installment_tax_2 or '' }} ">
+                                            
+                                        </td>
+                                        <td>
+                                            <span class="view-mode-element"> {% if installment_summary.installment_paid_2 %} PAID {% else %} Not Paid {% endif %} </span>
+                                            <select name="installment_paid_2" class="form-select form-select-sm edit-mode-element">
+                                                <option value="true" {% if installment_summary.installment_paid_2 %}selected{% endif %}>Paid</option>
+                                                <option value="false" {% if not installment_summary.installment_paid_2 %}selected{% endif %}>Not Paid</option>
+                                        </td>
+                                        </tr>
+                                    <tr>
+                                        <td>Third Installment</td>
+                                        <td>
+                                            <span class="view-mode-element"> {{ installment_summary.installment_tax_3 or 'N/A' }}</span>
+                                            <input type="text" class="form-control form-control-sm edit-mode-element" name="installment_tax_3" value="{{ installment_summary.installment_tax_3 or '' }} ">
+                                        </td>
+                                        <td>
+                                            <span class="view-mode-element"> {% if installment_summary.installment_paid_3 %} PAID {% else %} Not Paid {% endif %} </span>
+                                            <select name="installment_paid_3" class="form-select form-select-sm edit-mode-element">
+                                                <option value="true" {% if installment_summary.installment_paid_3 %}selected{% endif %}>Paid</option>
+                                                <option value="false" {% if not installment_summary.installment_paid_3 %}selected{% endif %}>Not Paid</option>                                         
+
+                                        </td>
+                                        </tr>
+                                    <tr>
+                                        <td>Fourth Installment</td>
+                                        <td>
+                                             <span class="view-mode-element"> {{ installment_summary.installment_tax_4 or 'N/A' }}</span>
+                                            <input type="text" class="form-control form-control-sm edit-mode-element" name="installment_tax_4" value="{{ installment_summary.installment_tax_4 or '' }} ">
+                                        </td>
+                                        <td>
+                                            <span class="view-mode-element"> {% if installment_summary.installment_paid_4 %} PAID {% else %} Not Paid {% endif %} </span>
+                                            <select name="installment_paid_4" class="form-select form-select-sm edit-mode-element">
+                                                <option value="true" {% if installment_summary.installment_paid_4 %}selected{% endif %}>Paid</option>
+                                                <option value="false" {% if not installment_summary.installment_paid_4 %}selected{% endif %}>Not Paid</option> 
+                                        </td>
+                                        </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="total-row" style="font-weight: bold;">
+                                        <td>TOTAL</td>
+                                        <td>
+                                            <span class="view-mode-element">{{ installment_summary.installment_total or 'N/A' }}</span>
+                                            <input type="text" class="form-control form-control-sm edit-mode-element" name="installment_total" value="{{ installment_summary.installment_total or '' }}">
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                
+        <div class="report-section">
+            <h3 class="report-section-title">D. SUMMARY OF TAX LIABILITY</h3>
+            
+            <!-- Add Row Button (only in edit mode) -->
+            <div class="mb-3 edit-mode-element">
+                <button type="button" class="btn btn-sm btn-success" id="addTaxLiabilityRow">
+                    <i class="fas fa-plus me-1"></i> Add New Tax Liability Row
+                </button>
+            </div>
+            
+            <table class="table report-table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Tax Head</th>
+                        <th>Principal Tax</th>
+                        <th>Penalty</th>
+                        <th>Interest</th>
+                        <th>Total</th>
+                        <th class="edit-mode-element">Delete</th>
+                    </tr>
+                </thead>
+                <tbody id="taxLiabilityTbody">
+                    {% if tax_liabilities %}
+                        {% for item in tax_liabilities %}
+                        <tr>
+                            <td>
+                                <span class="view-mode-element">{{ item.period }}</span>
+                                <input type="text" class="form-control form-control-sm edit-mode-element" name="tl_period_{{ item.id }}" value="{{ item.period or '' }}">
+                            </td>
+                            <td>
+                                <span class="view-mode-element">{{ item.tax_head }}</span>
+                                <input type="text" class="form-control form-control-sm edit-mode-element" name="tl_tax_head_{{ item.id }}" value="{{ item.tax_head or '' }}">
+                            </td>
+                            <td>
+                                <span class="view-mode-element">{{ "{:,.2f}".format(item.principal or 0) }}</span>
+                                <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="tl_principal_{{ item.id }}" value="{{ item.principal or '' }}">
+                            </td>
+                            <td>
+                                <span class="view-mode-element">{{ "{:,.2f}".format(item.penalty or 0) }}</span>
+                                <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="tl_penalty_{{ item.id }}" value="{{ item.penalty or '' }}">
+                            </td>
+                            <td>
+                                <span class="view-mode-element">{{ "{:,.2f}".format(item.interest or 0) }}</span>
+                                <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="tl_interest_{{ item.id }}" value="{{ item.interest or '' }}">
+                            </td>
+                            <td>
+                                <span class="view-mode-element">{{ "{:,.2f}".format(item.total or 0) }}</span>
+                                <input type="number" step="0.01" class="form-control form-control-sm edit-mode-element" name="tl_total_{{ item.id }}" value="{{ item.total or '' }}">
+                            </td>
+                            <td class="edit-mode-element text-center">
+                                <input type="checkbox" class="form-check-input delete-checkbox" 
+                                    name="tl_delete_{{ item.id }}" 
+                                    data-liability-id="{{ item.id }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="view-mode-element">
+                            <td colspan="7" class="text-center text-muted">No tax liability data available.</td>
+                        </tr>
+                    {% endif %}
+                    
+                    <!-- New entry row (for single new entry) -->
+                    <tr class="edit-mode-element new-entry-row">
+                        <td><input type="text" class="form-control form-control-sm" name="new_tl_period" placeholder="Period"></td>
+                        <td><input type="text" class="form-control form-control-sm" name="new_tl_tax_head" placeholder="Tax Head"></td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="new_tl_principal" placeholder="Principal"></td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="new_tl_penalty" placeholder="Penalty"></td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="new_tl_interest" placeholder="Interest"></td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="new_tl_total" placeholder="Total"></td>
+                        <td class="edit-mode-element"></td> <!-- Empty cell for delete column -->
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    <div class="comments-section">
+        <h1>comments</h1>
+        <textarea name="comments" id="comments"> {{ vat_form.comments }}</textarea>
+    </div>
+
+</div>
+ 
+
+
+
+
+
+

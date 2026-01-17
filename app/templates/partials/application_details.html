@@ -1,0 +1,33 @@
+<!-- templates/opportunities/admin/partials/application_details.html -->
+<div class="row">
+    <div class="col-md-6">
+        <h6>Applicant Information</h6>
+        <p><strong>Name:</strong> {{ application.applicant_name }}</p>
+        <p><strong>Email:</strong> {{ application.applicant_email }}</p>
+        <p><strong>Phone:</strong> {{ application.biodata.phone or 'Not provided' }}</p>
+        <p><strong>Applied:</strong> {{ application.submitted_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+    </div>
+    <div class="col-md-6">
+        <h6>Opportunity Details</h6>
+        <p><strong>Position:</strong> {{ application.opportunity.title }}</p>
+        <p><strong>Client:</strong> {{ application.opportunity.display_client or '3A CPA LLP' }}</p>
+        <p><strong>Type:</strong> {{ application.opportunity.opportunity_type.value|title }}</p>
+        <p><strong>Location:</strong> {% if application.opportunity.is_remote %}Remote{% else %}{{ application.opportunity.location }}{% endif %}</p>
+    </div>
+</div>
+
+<div class="mt-3">
+    <h6>Cover Letter</h6>
+    <div class="border p-3 bg-light">
+        {{ application.cover_letter|replace('\n', '<br>')|safe }}
+    </div>
+</div>
+
+{% if application.biodata.resume_path %}
+<div class="mt-3">
+    <a href="{{ url_for('static', filename='uploads/' + application.biodata.resume_path) }}" 
+       class="btn btn-outline-primary btn-sm" target="_blank">
+        <i class="bi bi-download"></i> Download Resume
+    </a>
+</div>
+{% endif %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Technical Test - Stage 1</h2>
+        <div class="text-end">
+            <div id="timer" class="fs-4 fw-bold text-primary"></div>
+            <small class="text-muted">Time Remaining</small>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Question {{ current_index }} of {{ total_questions }}</h5>
+        </div>
+        <div class="card-body">
+            <form id="techTestForm" method="POST" action="{{ url_for('interview.submit_technical_answer', candidate_stage_id=candidate_stage_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="question_id" value="{{ question.id }}">
+                <input type="hidden" name="time_started" id="timeStarted" value="{{ now_timestamp }}">
+                
+                <h4 class="mb-4">{{ question.text }}</h4>
+                
+                {% if question.question_type.value == 'multiple_choice' %}
+                <div class="choices-container">
+                    {% for choice in question.choices %}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" 
+                               name="selected_choice" id="choice{{ choice.id }}" 
+                               value="{{ choice.id }}"
+                               {% if pre_selected_choice == choice.id %}checked{% endif %}>
+                        <label class="form-check-label" for="choice{{ choice.id }}">
+                            {{ choice.text }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="form-group">
+                    <textarea class="form-control" name="open_ended_answer" 
+                              rows="6" placeholder="Type your answer here..."
+                              >{{ pre_filled_answer or '' }}</textarea>
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between mt-4">
+                    {% if current_index > 1 %}
+                    <button type="button" class="btn btn-secondary" onclick="navigateToQuestion({{ current_index - 1 }})">
+                        ← Previous
+                    </button>
+                    {% else %}
+                    <div></div>
+                    {% endif %}
+                    
+                    {% if current_index < total_questions %}
+                    <button type="submit" name="action" value="next" class="btn btn-primary">
+                        Save & Next →
+                    </button>
+                    {% else %}
+                    <button type="submit" name="action" value="finish" class="btn btn-success">
+                        Finish Test
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Question Navigation -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h6>Question Navigation</h6>
+            <div class="d-flex flex-wrap gap-2">
+                {% for i in range(1, total_questions + 1) %}
+                <button type="button" class="btn btn-sm {% if i == current_index %}btn-primary{% elif i in answered_questions %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
+                        onclick="navigateToQuestion({{ i }})">
+                    {{ i }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let timeRemaining = {{ time_remaining }};
+const timerElement = document.getElementById('timer');
+
+function updateTimer() {
+    if (timeRemaining <= 0) {
+        timerElement.textContent = '00:00';
+        alert('Time is up! Submitting your test...');
+        document.getElementById('techTestForm').submit();
+        return;
+    }
+    
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    timeRemaining--;
+}
+
+function navigateToQuestion(questionNumber) {
+    window.location.href = `{{ url_for('interview.technical_test', candidate_stage_id=candidate_stage_id) }}?question=${questionNumber}`;
+}
+
+// Start timer
+setInterval(updateTimer, 1000);
+updateTimer();
+
+// Auto-save when leaving page
+window.addEventListener('beforeunload', function() {
+    // You can implement auto-save here if needed
+});
+</script>
+{% endblock %}

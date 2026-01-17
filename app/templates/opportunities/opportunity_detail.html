@@ -1,0 +1,256 @@
+<!-- templates/opportunities/opportunity_detail.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ opportunity.title }} - 3A CPA LLP{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Opportunity Header -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1 class="h3 mb-2">{{ opportunity.title }}</h1>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge {% if opportunity.opportunity_type.value == 'internal' %}bg-success{% else %}bg-primary{% endif %}">
+                                    {{ opportunity.opportunity_type.value|title }} Position
+                                </span>
+                                {% if opportunity.is_remote %}
+                                <span class="badge bg-info">Remote</span>
+                                {% endif %}
+                                <span class="badge bg-warning">{{ opportunity.location }}</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small">
+                                <i class="bi bi-eye"></i> {{ opportunity.views_count }} views
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-people"></i> {{ opportunity.applications|length }} applications
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client and Role Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-building"></i> Client:</strong>
+                            <span class="ms-2">{{ opportunity.display_client or '3A CPA LLP' }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-person-badge"></i> Role:</strong>
+                            <span class="ms-2">{{ opportunity.job_role.name if opportunity.job_role else opportunity.job_role_name }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Application Period -->
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Application Opens:</strong><br>
+                                {{ opportunity.opening_date.strftime('%B %d, %Y') }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Application Closes:</strong><br>
+                                {{ opportunity.closing_date.strftime('%B %d, %Y') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if opportunity.is_active %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('opportunities.apply_opportunity', opportunity_id=opportunity.id) }}" 
+                           class="btn btn-primary btn-lg">
+                            <i class="bi bi-send-check"></i> Apply Now
+                        </a>
+                        <a href="{{ url_for('opportunities.careers') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Opportunities
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        This opportunity is no longer accepting applications.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Job Description -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Job Description</h5>
+                </div>
+                <div class="card-body">
+                    <div class="job-description">
+                        {{ opportunity.description|replace('\n', '<br>')|safe }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirements -->
+            {% if opportunity.requirements %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Requirements & Qualifications</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for requirement in opportunity.requirements %}
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            {{ requirement }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Benefits -->
+            {% if opportunity.benefits %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Benefits & Perks</h5>
+                </div>
+                <div class="card-body">
+                    <div class="benefits-content">
+                        {{ opportunity.benefits|replace('\n', '<br>')|safe }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Facts -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Opportunity Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Position Type:</strong><br>
+                        <span class="badge {% if opportunity.opportunity_type.value == 'internal' %}bg-success{% else %}bg-primary{% endif %}">
+                            {{ opportunity.opportunity_type.value|title }}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Location:</strong><br>
+                        {% if opportunity.is_remote %}
+                        <span class="text-success">Remote</span>
+                        {% else %}
+                        {{ opportunity.location }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Application Period:</strong><br>
+                        {{ opportunity.opening_date.strftime('%b %d') }} - {{ opportunity.closing_date.strftime('%b %d, %Y') }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Status:</strong><br>
+                        {% if opportunity.is_active %}
+                        <span class="badge bg-success">Accepting Applications</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Closed</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <strong>Posted:</strong><br>
+                        {{ opportunity.created_at.strftime('%B %d, %Y') }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application CTA -->
+            {% if opportunity.is_active %}
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h5>Ready to Apply?</h5>
+                    <p class="mb-3">Submit your application before the deadline</p>
+                    <a href="{{ url_for('opportunities.apply_opportunity', opportunity_id=opportunity.id) }}" 
+                       class="btn btn-light btn-lg w-100">
+                        <i class="bi bi-send-check"></i> Apply Now
+                    </a>
+                    <small class="d-block mt-2">
+                        {{ (opportunity.closing_date - now()).days }} days remaining
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Share Opportunity -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">Share This Opportunity</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="shareOnLinkedIn()">
+                            <i class="bi bi-linkedin"></i> Share on LinkedIn
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="shareOnTwitter()">
+                            <i class="bi bi-twitter"></i> Share on Twitter
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="copyLink()">
+                            <i class="bi bi-link-45deg"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function shareOnLinkedIn() {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent("{{ opportunity.title }}");
+    const summary = encodeURIComponent("Check out this opportunity at 3A CPA LLP");
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+}
+
+function shareOnTwitter() {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent("Check out this opportunity: {{ opportunity.title }}");
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        // Show success message
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        btn.classList.remove('btn-outline-success');
+        btn.classList.add('btn-success');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-success');
+        }, 2000);
+    });
+}
+</script>
+
+<style>
+.job-description {
+    line-height: 1.6;
+}
+
+.job-description br {
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.benefits-content {
+    line-height: 1.6;
+}
+</style>
+{% endblock %}

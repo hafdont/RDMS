@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Clients List{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Clients</h2>
+        <a href="{{ url_for('client.create_client') }}" class="btn btn-primary">Add New Client</a>
+      </div>
+      
+      <div class="mb-3">
+        <input type="text" id="clientSearchInput" class="form-control" placeholder="Search for a client...">
+      </div>
+
+      {% if clients %}
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Client Name</th>
+              <th scope="col">Contact Email</th>
+              <th scope="col">Phone Number</th>
+            </tr>
+          </thead>
+          <tbody id="clientTableBody">
+            {% for client in clients %}
+            <tr>
+              <th scope="row">{{ loop.index }}</th>
+              <td><a href="{{ url_for('client.get_client_details', client_id=client.id) }}">{{ client.name }}</a></td>
+              <td>{{ client.contact_email or '-' }}</td>
+              <td>{{ client.phone_number or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p class="text-muted">No clients found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('clientSearchInput').addEventListener('keyup', function() {
+    let filter = this.value.toUpperCase();
+    let rows = document.getElementById('clientTableBody').getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      let clientNameCell = rows[i].getElementsByTagName('td')[0];
+      if (clientNameCell) {
+        let textValue = clientNameCell.textContent || clientNameCell.innerText;
+        if (textValue.toUpperCase().indexOf(filter) > -1) {
+          rows[i].style.display = "";
+        } else {
+          rows[i].style.display = "none";
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

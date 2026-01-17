@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Department: {{ department_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="page-header">
+        <h1 class="page-title mb-0">Department: {{ department_name }}</h1>
+    </div>
+
+    <div class="widget-card">
+        <div class="widget-header">
+            <h2 class="widget-title">Department Members</h2>
+        </div>
+        <div class="widget-body">
+            {% for role, members in members_by_role.items() %}
+            <div class="mb-4">
+                <h3 class="h5 capitalize">{{ role }}s</h3>
+                <div class="row">
+                    {% for member in members %}
+                    <div class="col-md-4 mb-3">
+                        <div class="member-card p-3 custom-border">
+                            <div class="d-flex align-items-center">
+                                <img class="avatar me-3" src="{{ url_for('static', filename='images/' + member.profile_image_file) }}" alt="{{ member.first_name }}">
+                                <div>
+                                    <h6 class="mb-0">{{ member.first_name }} {{ member.last_name }}</h6>
+                                    <p class="text-muted mb-0">{{ member.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="widget-card mt-3">
+        <div class="widget-header">
+            <h2 class="widget-title">Client Task Summary</h2>
+        </div>
+        <div class="widget-body">
+            {% if client_tasks_summary %}
+            <div class="row">
+                {% for client_name, statuses in client_tasks_summary.items() %}
+                <div class="col-md-6 mb-4">
+                    <div class="client-card custom-border p-3">
+                        <h4 class="h5 text-primary-brand mb-3">{{ client_name }}</h4>
+                        
+                        {% if statuses.active %}
+                        <div class="mb-3">
+                            <h5 class="h6">
+                                <i class="fas fa-circle-notch text-info me-2"></i>Active Tasks ({{ statuses.active | length }})
+                            </h5>
+                            <ul class="list-unstyled">
+                                {% for task in statuses.active %}
+                                <li>
+                                    <span class="font-weight-bold">{{ task.title }}</span>
+                                    <span class="text-muted d-block small">Assigned to: {{ task.assigned_to_full_name }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        {% if statuses.under_review %}
+                        <div class="mb-3">
+                            <h5 class="h6">
+                                <i class="fas fa-search text-warning me-2"></i>Under Review ({{ statuses.under_review | length }})
+                            </h5>
+                            <ul class="list-unstyled">
+                                {% for task in statuses.under_review %}
+                                <li>
+                                    <span class="font-weight-bold">{{ task.title }}</span>
+                                    <span class="text-muted d-block small">Assigned to: {{ task.assigned_to_full_name }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        {% if statuses.completed %}
+                        <div>
+                            <h5 class="h6">
+                                <i class="fas fa-check-circle text-success me-2"></i>Completed ({{ statuses.completed | length }})
+                            </h5>
+                            <ul class="list-unstyled">
+                                {% for task in statuses.completed %}
+                                <li>
+                                    <span class="font-weight-bold">{{ task.title }}</span>
+                                    <span class="text-muted d-block small">Completed by: {{ task.assigned_to_full_name }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No active tasks found for any clients in this department.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
